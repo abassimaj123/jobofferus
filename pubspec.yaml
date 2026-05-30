@@ -1,0 +1,65 @@
+name: jobofferus
+description: Compare job offers — true after-tax total compensation analysis.
+publish_to: 'none'
+version: 1.0.5+2
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  calcwise_core:
+    path: ../packages/calcwise_core
+  flutter:
+    sdk: flutter
+
+  provider: ^6.1.2
+  share_plus: ^10.1.4
+  shared_preferences: ^2.3.5
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  google_mobile_ads: ^5.1.0
+  pdf: ^3.11.1
+  printing: ^5.13.2
+  path_provider: ^2.1.4
+  firebase_core: ^3.6.0
+  firebase_analytics: ^11.3.3
+  firebase_crashlytics: ^4.1.3
+  in_app_purchase: ^3.2.0
+  in_app_review: ^2.0.9
+  sqflite: ^2.3.1
+  path: ^1.9.0
+  url_launcher: ^6.3.1
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  calcwise_lint:
+    git:
+      url: https://github.com/abassimaj123/calcwise_core.git
+      path: calcwise_lint
+      ref: main
+  custom_lint: ">=0.6.0 <0.8.0"
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/icon.png"
+  min_sdk_android: 21
+  web:
+    generate: false
+  windows:
+    generate: false
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
+
+
