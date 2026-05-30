@@ -93,7 +93,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               isEs ? 'Eliminar' : 'Delete',
-              style: const TextStyle(color: CalcwiseSemanticColors.errorDark),
+              style: TextStyle(color: CalcwiseSemanticColors.error(Theme.of(ctx).brightness)),
             ),
           ),
         ],
@@ -118,7 +118,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               isEs ? 'Borrar' : 'Clear',
-              style: const TextStyle(color: CalcwiseSemanticColors.errorDark),
+              style: TextStyle(color: CalcwiseSemanticColors.error(Theme.of(ctx).brightness)),
             ),
           ),
         ],
@@ -155,8 +155,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 builder: (context, isPremium, _) {
                   if (isPremium && _history.isNotEmpty) {
                     return IconButton(
-                      icon: const Icon(Icons.delete_sweep,
-                          color: CalcwiseSemanticColors.errorDark),
+                      icon: Icon(Icons.delete_sweep,
+                          color: CalcwiseSemanticColors.error(Theme.of(context).brightness)),
                       tooltip: isEs ? 'Borrar todo' : 'Clear all',
                       onPressed: () {
                         HapticFeedback.mediumImpact();
