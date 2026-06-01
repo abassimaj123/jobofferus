@@ -710,22 +710,31 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
-      child: Column(
+      child: CalcwisePageEntrance(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Winner banner ──────────────────────────────────────────────
-          WinnerBanner(result: widget.result, isSpanish: isSpanish),
+          CalcwiseStaggerItem(
+            index: 0,
+            child: WinnerBanner(result: widget.result, isSpanish: isSpanish),
+          ),
           const SizedBox(height: AppSpacing.lg),
 
           // ── Hero KPI card ──────────────────────────────────────────────
-          _HeroKpiCard(
-              result: widget.result,
-              offerC: widget.offerC,
-              isSpanish: isSpanish),
+          CalcwiseStaggerItem(
+            index: 1,
+            child: _HeroKpiCard(
+                result: widget.result,
+                offerC: widget.offerC,
+                isSpanish: isSpanish),
+          ),
           const SizedBox(height: AppSpacing.lg),
 
           // ── Offer labels header ────────────────────────────────────────
-          _OfferHeader(
+          CalcwiseStaggerItem(
+            index: 2,
+            child: _OfferHeader(
             labelA: widget.offerA.label.isNotEmpty
                 ? widget.offerA.label
                 : (isSpanish ? 'Oferta A' : 'Offer A'),
@@ -740,7 +749,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                     : (isSpanish ? 'Oferta C' : 'Offer C'))
                 : null,
             companyC: has3 ? widget.offerC!.company : null,
-          ),
+          ),        // closes _OfferHeader
+          ),        // closes CalcwiseStaggerItem index 2
           const SizedBox(height: AppSpacing.lg),
 
           // ── Core comparison card ───────────────────────────────────────
@@ -1032,7 +1042,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             ),
           const SizedBox(height: AppSpacing.xl),
         ],
-      ),
+        ),        // closes Column
+      ),          // closes CalcwisePageEntrance
     );
   }
 }
