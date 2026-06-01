@@ -177,9 +177,11 @@ class _OfferFormCardState extends State<OfferFormCard>
         borderRadius: BorderRadius.circular(AppRadius.xl),
         child: Column(children: [
           // ── gradient header ──────────────────────────────────
-          GestureDetector(
+          InkWell(
             onTap: () => setState(() => _expanded = !_expanded),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
             child: Container(
+              constraints: const BoxConstraints(minHeight: 48),
               padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
                   AppSpacing.mdPlus, AppSpacing.mdPlus, AppSpacing.mdPlus),
               decoration: BoxDecoration(gradient: _grad),
@@ -823,10 +825,12 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ct = CalcwiseTheme.of(context);
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.xxl),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        constraints: const BoxConstraints(minHeight: 48),
         padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md, vertical: AppSpacing.xs + 2),
         decoration: BoxDecoration(
@@ -876,7 +880,7 @@ class _DeadlineRow extends StatelessWidget {
       ),
       const SizedBox(width: AppSpacing.sm),
       Expanded(
-        child: GestureDetector(
+        child: InkWell(
           onTap: () async {
             final picked = await showDatePicker(
               context: context,
@@ -887,6 +891,7 @@ class _DeadlineRow extends StatelessWidget {
             );
             if (picked != null) onDeadlineChanged(picked);
           },
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
           child: _DeadlineChip(
             deadline: deadline,
             isSpanish: isSpanish,
@@ -895,11 +900,17 @@ class _DeadlineRow extends StatelessWidget {
         ),
       ),
       if (deadline != null)
-        GestureDetector(
+        InkWell(
           onTap: () => onDeadlineChanged(null),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           child: Padding(
-            padding: const EdgeInsets.only(left: AppSpacing.xs),
-            child: Icon(Icons.close_rounded, size: 16, color: ct.textSecondary),
+            padding: const EdgeInsets.all(AppSpacing.xs),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              child: Center(
+                child: Icon(Icons.close_rounded, size: 16, color: ct.textSecondary),
+              ),
+            ),
           ),
         ),
     ]);
@@ -1077,9 +1088,11 @@ class _BenefitsToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Container(
+        constraints: const BoxConstraints(minHeight: 48),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),

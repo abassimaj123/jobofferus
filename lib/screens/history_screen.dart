@@ -378,10 +378,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       jobTitle.isNotEmpty
                           ? jobTitle
                           : (isEs ? 'Oferta' : 'Offer'),
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: AppTextSize.body,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.primary),
+                          color: ct.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -463,7 +463,6 @@ class _HistorySkeleton extends StatelessWidget {
   const _HistorySkeleton();
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -471,14 +470,7 @@ class _HistorySkeleton extends StatelessWidget {
               4,
               (i) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Container(
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(16),
-                        )),
+                    child: CalcwiseSkeleton.box(height: 80),
                   ))),
     );
   }
