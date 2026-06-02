@@ -83,13 +83,16 @@ class ComparisonBar extends StatelessWidget {
             final half = (box.maxWidth - 6) / 2;
             return Row(children: [
               // A ← from centre
-              SizedBox(
+              GestureDetector(
+                onTap: () => _showValue(context, '${label}A', valueA, fmt),
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
                   width: half,
                   child: Stack(
                     alignment: Alignment.centerRight,
                     children: [
                       Container(
-                          height: 10,
+                          height: CalcwiseChartTokens.barWidth,
                           decoration: BoxDecoration(
                             color: AppTheme.offerADeep.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(5),
@@ -105,7 +108,9 @@ class ComparisonBar extends StatelessWidget {
                             fromRight: true,
                           )),
                     ],
-                  )),
+                  ),
+                ),
+              ),
               // divider
               SizedBox(
                   width: 6,
@@ -120,13 +125,16 @@ class ComparisonBar extends StatelessWidget {
                     ),
                   ))),
               // B → from centre
-              SizedBox(
+              GestureDetector(
+                onTap: () => _showValue(context, '${label}B', valueB, fmt),
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
                   width: half,
                   child: Stack(
                     alignment: Alignment.centerLeft,
                     children: [
                       Container(
-                          height: 10,
+                          height: CalcwiseChartTokens.barWidth,
                           decoration: BoxDecoration(
                             color: AppTheme.offerBDeep.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(5),
@@ -140,7 +148,9 @@ class ComparisonBar extends StatelessWidget {
                         fromRight: false,
                       ),
                     ],
-                  )),
+                  ),
+                ),
+              ),
             ]);
           }),
         ],
@@ -151,6 +161,17 @@ class ComparisonBar extends StatelessWidget {
   static String _money(double v) => v >= 1000
       ? '\$${(v / 1000).toStringAsFixed(1)}k'
       : '\$${v.toStringAsFixed(0)}';
+}
+
+void _showValue(
+    BuildContext context, String label, double value, String Function(double) fmt) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(
+      content: Text('$label: ${fmt(value)}'),
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+    ));
 }
 
 // ── Three-way comparison bar ──────────────────────────────────────────────────
@@ -261,7 +282,10 @@ class _ThreeRow extends StatelessWidget {
     return LayoutBuilder(builder: (ctx, box) {
       final barMaxW = box.maxWidth - 48 - AppSpacing.sm * 2 - 60;
       final barW = (barMaxW * ratio).clamp(2.0, barMaxW);
-      return Row(children: [
+      return GestureDetector(
+          onTap: () => _showValue(context, 'Offer $letter', value, fmt),
+          behavior: HitTestBehavior.opaque,
+          child: Row(children: [
         // Letter badge
         Container(
           width: 20,
@@ -287,16 +311,16 @@ class _ThreeRow extends StatelessWidget {
           child: Stack(
             children: [
               Container(
-                height: 8,
+                height: CalcwiseChartTokens.barWidth,
                 decoration: BoxDecoration(
                   color: deepColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 450),
+                duration: CalcwiseChartTokens.swapDuration,
                 curve: Curves.easeOutCubic,
-                height: 8,
+                height: CalcwiseChartTokens.barWidth,
                 width: barW,
                 decoration: BoxDecoration(
                   gradient: isWinner ? gradient : null,
@@ -334,7 +358,7 @@ class _ThreeRow extends StatelessWidget {
             ],
           ),
         ),
-      ]);
+      ]));
     });
   }
 }
@@ -355,9 +379,9 @@ class _Bar extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = (maxW * ratio).clamp(2.0, maxW);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 450),
+      duration: CalcwiseChartTokens.swapDuration,
       curve: Curves.easeOutCubic,
-      height: 10,
+      height: CalcwiseChartTokens.barWidth,
       width: w,
       decoration: BoxDecoration(
         gradient: gradient,
