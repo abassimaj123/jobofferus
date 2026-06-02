@@ -279,6 +279,7 @@ class _ThreeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return LayoutBuilder(builder: (ctx, box) {
       final barMaxW = box.maxWidth - 48 - AppSpacing.sm * 2 - 60;
       final barW = (barMaxW * ratio).clamp(2.0, barMaxW);
@@ -298,7 +299,7 @@ class _ThreeRow extends StatelessWidget {
             child: Text(
               letter,
               style: TextStyle(
-                color: isWinner ? Colors.white : color,
+                color: isWinner ? colorScheme.onPrimary : color,
                 fontSize: AppTextSize.xxs,
                 fontWeight: FontWeight.w800,
               ),
@@ -429,6 +430,7 @@ class _WinBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final grad = isA ? AppTheme.offerAGradient : AppTheme.offerBGradient;
     final color = isA ? AppTheme.offerADeep : AppTheme.offerBDeep;
     final title = isA
@@ -457,24 +459,24 @@ class _WinBanner extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: colorScheme.onPrimary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
-              child: const Center(
+              child: Center(
                   child: Icon(Icons.emoji_events_rounded,
-                      color: Colors.white, size: 34))),
+                      color: colorScheme.onPrimary, size: 34))),
           Container(
               width: 22,
               height: 22,
               decoration: BoxDecoration(
                 color: AppTheme.accent,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
+                border: Border.all(color: colorScheme.onPrimary, width: 1.5),
               ),
               child: Center(
                   child: Text(isA ? 'A' : 'B',
-                      style: const TextStyle(
-                          color: Colors.white,
+                      style: TextStyle(
+                          color: colorScheme.onPrimary,
                           fontSize: AppTextSize.xs,
                           fontWeight: FontWeight.w900)))),
         ]),
@@ -484,8 +486,8 @@ class _WinBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colorScheme.onPrimary,
                   fontSize: AppTextSize.titleLg,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -493,7 +495,7 @@ class _WinBanner extends StatelessWidget {
             const SizedBox(height: 5),
             Text(sub,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: colorScheme.onPrimary.withValues(alpha: 0.85),
                   fontSize: AppTextSize.md,
                   height: 1.4,
                 )),
@@ -501,16 +503,16 @@ class _WinBanner extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: colorScheme.onPrimary.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(AppRadius.xxl),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                border: Border.all(color: colorScheme.onPrimary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 isSp
                     ? '+$advStr/año · \$${(adv / 12).toStringAsFixed(0)}/mes'
                     : '+$advStr/yr · \$${(adv / 12).toStringAsFixed(0)}/mo',
-                style: const TextStyle(
-                    color: Colors.white,
+                style: TextStyle(
+                    color: colorScheme.onPrimary,
                     fontSize: AppTextSize.md,
                     fontWeight: FontWeight.w700),
               ),
@@ -531,6 +533,7 @@ class _WinBannerC extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     const grad = AppTheme.offerCGradient;
     const color = AppTheme.offerCDeep;
     final title = isSp ? 'Oferta C gana' : 'Offer C Wins';
@@ -557,24 +560,24 @@ class _WinBannerC extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: colorScheme.onPrimary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
-              child: const Center(
+              child: Center(
                   child: Icon(Icons.emoji_events_rounded,
-                      color: Colors.white, size: 34))),
+                      color: colorScheme.onPrimary, size: 34))),
           Container(
               width: 22,
               height: 22,
               decoration: BoxDecoration(
                 color: AppTheme.accent,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
+                border: Border.all(color: colorScheme.onPrimary, width: 1.5),
               ),
-              child: const Center(
+              child: Center(
                   child: Text('C',
                       style: TextStyle(
-                          color: Colors.white,
+                          color: colorScheme.onPrimary,
                           fontSize: AppTextSize.xs,
                           fontWeight: FontWeight.w900)))),
         ]),
@@ -584,8 +587,8 @@ class _WinBannerC extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colorScheme.onPrimary,
                   fontSize: AppTextSize.titleLg,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -593,7 +596,7 @@ class _WinBannerC extends StatelessWidget {
             const SizedBox(height: 5),
             Text(sub,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: colorScheme.onPrimary.withValues(alpha: 0.85),
                   fontSize: AppTextSize.md,
                   height: 1.4,
                 )),
@@ -601,16 +604,16 @@ class _WinBannerC extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: colorScheme.onPrimary.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(AppRadius.xxl),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                border: Border.all(color: colorScheme.onPrimary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 isSp
                     ? '+$advStr/año · \$${(adv / 12).toStringAsFixed(0)}/mes'
                     : '+$advStr/yr · \$${(adv / 12).toStringAsFixed(0)}/mo',
-                style: const TextStyle(
-                    color: Colors.white,
+                style: TextStyle(
+                    color: colorScheme.onPrimary,
                     fontSize: AppTextSize.md,
                     fontWeight: FontWeight.w700),
               ),
@@ -628,6 +631,7 @@ class _TieBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
@@ -647,20 +651,20 @@ class _TieBanner extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: colorScheme.onPrimary.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Center(
+            child: Center(
                 child: Icon(Icons.balance_rounded,
-                    color: Colors.white, size: 34))),
+                    color: colorScheme.onPrimary, size: 34))),
         const SizedBox(width: AppSpacing.lg),
         Expanded(
             child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(isSp ? 'Empate perfecto' : "It's a Tie!",
-                style: const TextStyle(
-                    color: Colors.white,
+                style: TextStyle(
+                    color: colorScheme.onPrimary,
                     fontSize: AppTextSize.titleLg,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5)),
@@ -670,7 +674,7 @@ class _TieBanner extends StatelessWidget {
                   ? 'Ambas ofertas son prácticamente iguales en compensación total'
                   : 'Both offers are nearly equal in total comp',
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: colorScheme.onPrimary.withValues(alpha: 0.85),
                   fontSize: AppTextSize.md,
                   height: 1.4),
             ),
