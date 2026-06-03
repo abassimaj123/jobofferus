@@ -440,8 +440,8 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
               borderRadius: pw.BorderRadius.circular(4)),
           child: pw.Text(
             isEs
-                ? 'Este reporte es solo informativo. Los cálculos son estimaciones basadas en tarifas federales y estatales de 2026. Consulte a un asesor fiscal certificado antes de tomar decisiones financieras.'
-                : 'This report is for informational purposes only. Calculations are estimates based on 2026 federal and state tax rates. Consult a certified tax professional before making financial decisions.',
+                ? 'Este reporte es solo informativo. Los cálculos son estimaciones basadas en tarifas federales y estatales de 2025. Consulte a un asesor fiscal certificado antes de tomar decisiones financieras.'
+                : 'This report is for informational purposes only. Calculations are estimates based on 2025 federal and state tax rates. Consult a certified tax professional before making financial decisions.',
             style: pw.TextStyle(
                 fontSize: 7,
                 color: grey,

@@ -112,7 +112,7 @@ class OfferEngine {
     int workDaysPerYear = 235, // excludes PTO + holidays
   }) {
     if (isRemote || milesOneWay <= 0) return 0;
-    const irsRate = 0.725; // IRS 2026
+    const irsRate = 0.725; // IRS 2025
     return milesOneWay * 2 * workDaysPerYear * irsRate;
   }
 
@@ -126,10 +126,12 @@ class OfferEngine {
     final totalInc = annualSalary + signingBonus;
     final taxOnTotal = federalTax(totalInc) +
         stateTax(totalInc, stateCode) +
-        localTax(totalInc, cityName);
+        localTax(totalInc, cityName) +
+        ficaTax(totalInc);
     final taxOnSalary = federalTax(annualSalary) +
         stateTax(annualSalary, stateCode) +
-        localTax(annualSalary, cityName);
+        localTax(annualSalary, cityName) +
+        ficaTax(annualSalary);
     return signingBonus - (taxOnTotal - taxOnSalary);
   }
 
@@ -193,7 +195,7 @@ class OfferEngine {
     for (var i = 0; i < n; i++) {
       final saved = annualNetIncome[i] * savingsRate;
       // Compound from year i to end of year n
-      wealth += saved * pow1r(annualReturn, n - i);
+      wealth += saved * pow1r(annualReturn, n - i - 1);
     }
     return wealth;
   }

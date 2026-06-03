@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _debounce;
   bool _wasPremium = false;
 
-  bool get _canCompare => _offerA.baseSalary > 0 && _offerB.baseSalary > 0;
+  bool get _canCompare => _offerA.baseSalary > 0 && _offerB.baseSalary > 0 && (!_showOfferC || _offerC.baseSalary > 0);
 
   @override
   void initState() {
@@ -458,7 +458,7 @@ class _HeroBanner extends StatelessWidget {
               child: Row(mainAxisSize: MainAxisSize.min, children: const [
                 Icon(Icons.verified_rounded, color: AppTheme.accent, size: 13),
                 SizedBox(width: AppSpacing.xs),
-                Text('2026',
+                Text('2025',
                     style: TextStyle(
                         color: AppTheme.accent,
                         fontSize: AppTextSize.sm,
@@ -492,7 +492,7 @@ class _HeroBanner extends StatelessWidget {
           Row(children: [
             _HChip(isSp ? '51 estados' : '51 States'),
             const SizedBox(width: AppSpacing.sm),
-            _HChip('FICA · IRS 2026'),
+            _HChip('FICA · IRS 2025'),
             const SizedBox(width: AppSpacing.sm),
             _HChip(isSp ? '3 Ofertas' : '3 Offers',
                 color: AppTheme.offerC.withValues(alpha: 0.22)),

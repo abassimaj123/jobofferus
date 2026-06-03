@@ -49,7 +49,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
   Future<void> _onExportCsv(bool isSpanish) async {
     HapticFeedback.mediumImpact();
-    if (!freemiumService.isPremium) {
+    if (!freemiumService.hasFullAccess) {
       _showPaywall(context, isSpanish);
       return;
     }
@@ -57,98 +57,132 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       final pctFmt = NumberFormat('0.0#', 'en_US');
       final a = widget.result.resultA;
       final b = widget.result.resultB;
+      final c = widget.result.resultC;
+      final hasC = widget.offerC != null && c != null;
       final labelA =
           widget.offerA.label.isNotEmpty ? widget.offerA.label : 'Offer A';
       final labelB =
           widget.offerB.label.isNotEmpty ? widget.offerB.label : 'Offer B';
+      final labelC = hasC
+          ? (widget.offerC!.label.isNotEmpty ? widget.offerC!.label : 'Offer C')
+          : null;
+
+      List<String> row3(String field, String vA, String vB, [String? vC]) =>
+          hasC ? [field, vA, vB, vC ?? ''] : [field, vA, vB];
 
       final rows = [
-        [isSpanish ? 'Campo' : 'Field', labelA, labelB],
-        [
+        [isSpanish ? 'Campo' : 'Field', labelA, labelB, if (hasC) labelC!],
+        row3(
           isSpanish ? 'Empresa' : 'Company',
           widget.offerA.company,
-          widget.offerB.company
-        ],
-        [isSpanish ? 'Ciudad' : 'City', widget.offerA.city, widget.offerB.city],
-        [
+          widget.offerB.company,
+          hasC ? widget.offerC!.company : null,
+        ),
+        row3(
+          isSpanish ? 'Ciudad' : 'City',
+          widget.offerA.city,
+          widget.offerB.city,
+          hasC ? widget.offerC!.city : null,
+        ),
+        row3(
           isSpanish ? 'Estado' : 'State',
           widget.offerA.stateCode,
-          widget.offerB.stateCode
-        ],
-        [
+          widget.offerB.stateCode,
+          hasC ? widget.offerC!.stateCode : null,
+        ),
+        row3(
           isSpanish ? 'Salario bruto' : 'Gross Salary',
           AmountFormatter.ui(a.grossSalary, 'USD'),
-          AmountFormatter.ui(b.grossSalary, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.grossSalary, 'USD'),
+          hasC ? AmountFormatter.ui(c!.grossSalary, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Ingreso neto anual' : 'Net Annual Take-Home',
           AmountFormatter.ui(a.netTakeHome, 'USD'),
-          AmountFormatter.ui(b.netTakeHome, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.netTakeHome, 'USD'),
+          hasC ? AmountFormatter.ui(c!.netTakeHome, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Ingreso neto mensual' : 'Net Monthly',
           AmountFormatter.ui(a.monthlyTakeHome, 'USD'),
-          AmountFormatter.ui(b.monthlyTakeHome, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.monthlyTakeHome, 'USD'),
+          hasC ? AmountFormatter.ui(c!.monthlyTakeHome, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Tasa efectiva' : 'Effective Tax Rate',
           '${pctFmt.format(a.effectiveTaxRate)}%',
-          '${pctFmt.format(b.effectiveTaxRate)}%'
-        ],
-        [
+          '${pctFmt.format(b.effectiveTaxRate)}%',
+          hasC ? '${pctFmt.format(c!.effectiveTaxRate)}%' : null,
+        ),
+        row3(
           isSpanish ? 'Impuesto federal' : 'Federal Tax',
           AmountFormatter.ui(a.federalTax, 'USD'),
-          AmountFormatter.ui(b.federalTax, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.federalTax, 'USD'),
+          hasC ? AmountFormatter.ui(c!.federalTax, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Impuesto estatal' : 'State Tax',
           AmountFormatter.ui(a.stateTax, 'USD'),
-          AmountFormatter.ui(b.stateTax, 'USD')
-        ],
-        ['FICA', AmountFormatter.ui(a.ficaTax, 'USD'), AmountFormatter.ui(b.ficaTax, 'USD')],
-        [
+          AmountFormatter.ui(b.stateTax, 'USD'),
+          hasC ? AmountFormatter.ui(c!.stateTax, 'USD') : null,
+        ),
+        row3(
+          'FICA',
+          AmountFormatter.ui(a.ficaTax, 'USD'),
+          AmountFormatter.ui(b.ficaTax, 'USD'),
+          hasC ? AmountFormatter.ui(c!.ficaTax, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Bono anual (neto)' : 'Annual Bonus (after tax)',
           AmountFormatter.ui(a.bonusAfterTax, 'USD'),
-          AmountFormatter.ui(b.bonusAfterTax, 'USD')
-        ],
-        if (a.signingBonusAfterTax > 0 || b.signingBonusAfterTax > 0)
-          [
-            isSpanish
-                ? 'Bono contratación (neto)'
-                : 'Signing Bonus (after tax)',
+          AmountFormatter.ui(b.bonusAfterTax, 'USD'),
+          hasC ? AmountFormatter.ui(c!.bonusAfterTax, 'USD') : null,
+        ),
+        if (a.signingBonusAfterTax > 0 ||
+            b.signingBonusAfterTax > 0 ||
+            (c?.signingBonusAfterTax ?? 0) > 0)
+          row3(
+            isSpanish ? 'Bono contratación (neto)' : 'Signing Bonus (after tax)',
             AmountFormatter.ui(a.signingBonusAfterTax, 'USD'),
-            AmountFormatter.ui(b.signingBonusAfterTax, 'USD')
-          ],
-        [
+            AmountFormatter.ui(b.signingBonusAfterTax, 'USD'),
+            hasC ? AmountFormatter.ui(c!.signingBonusAfterTax, 'USD') : null,
+          ),
+        row3(
           isSpanish ? 'Match 401k' : '401k Match',
           AmountFormatter.ui(a.k401kMatch, 'USD'),
-          AmountFormatter.ui(b.k401kMatch, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.k401kMatch, 'USD'),
+          hasC ? AmountFormatter.ui(c!.k401kMatch, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Beneficios salud' : 'Health Benefits',
           AmountFormatter.ui(a.healthBenefits, 'USD'),
-          AmountFormatter.ui(b.healthBenefits, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.healthBenefits, 'USD'),
+          hasC ? AmountFormatter.ui(c!.healthBenefits, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Valor PTO' : 'PTO Value',
           AmountFormatter.ui(a.ptoValue, 'USD'),
-          AmountFormatter.ui(b.ptoValue, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.ptoValue, 'USD'),
+          hasC ? AmountFormatter.ui(c!.ptoValue, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'RSU anual' : 'Annual RSU',
           AmountFormatter.ui(a.annualRsuValue, 'USD'),
-          AmountFormatter.ui(b.annualRsuValue, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.annualRsuValue, 'USD'),
+          hasC ? AmountFormatter.ui(c!.annualRsuValue, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Costo traslado' : 'Commute Cost',
           AmountFormatter.ui(a.commuteCost, 'USD'),
-          AmountFormatter.ui(b.commuteCost, 'USD')
-        ],
-        [
+          AmountFormatter.ui(b.commuteCost, 'USD'),
+          hasC ? AmountFormatter.ui(c!.commuteCost, 'USD') : null,
+        ),
+        row3(
           isSpanish ? 'Compensación total neta' : 'Total Net Compensation',
           AmountFormatter.ui(a.totalCompensation, 'USD'),
-          AmountFormatter.ui(b.totalCompensation, 'USD')
-        ],
+          AmountFormatter.ui(b.totalCompensation, 'USD'),
+          hasC ? AmountFormatter.ui(c!.totalCompensation, 'USD') : null,
+        ),
       ];
 
       final csv =
@@ -206,12 +240,16 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     final pctFmt = NumberFormat('0.0#', 'en_US');
     final a = widget.result.resultA;
     final b = widget.result.resultB;
+    final c = widget.result.resultC;
+    final hasC = widget.offerC != null && c != null;
     final winner = widget.result.winner;
     final winnerLabel = winner == Winner.offerA
         ? (isSpanish ? 'Oferta A gana' : 'Offer A wins')
         : winner == Winner.offerB
             ? (isSpanish ? 'Oferta B gana' : 'Offer B wins')
-            : (isSpanish ? 'Empate' : 'Tie');
+            : winner == Winner.offerC
+                ? (isSpanish ? 'Oferta C gana' : 'Offer C wins')
+                : (isSpanish ? 'Empate' : 'Tie');
     final advantage = AmountFormatter.ui(widget.result.annualAdvantage, 'USD');
 
     final pdf = pw.Document();
@@ -219,7 +257,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     final grey = PdfColors.grey700;
 
     pw.TableRow row(String label, String valA, String valB,
-            {bool bold = false}) =>
+            {bool bold = false, String? valC}) =>
         pw.TableRow(children: [
           pw.Padding(
               padding: const pw.EdgeInsets.all(6),
@@ -241,6 +279,15 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                       fontSize: 10,
                       fontWeight:
                           bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
+          if (hasC)
+            pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(valC ?? '',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                        fontSize: 10,
+                        fontWeight:
+                            bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
         ]);
 
     pdf.addPage(pw.Page(
@@ -288,11 +335,18 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           // Comparison table
           pw.Table(
             border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(2.5),
-              1: const pw.FlexColumnWidth(1.5),
-              2: const pw.FlexColumnWidth(1.5),
-            },
+            columnWidths: hasC
+                ? {
+                    0: const pw.FlexColumnWidth(2.5),
+                    1: const pw.FlexColumnWidth(1.2),
+                    2: const pw.FlexColumnWidth(1.2),
+                    3: const pw.FlexColumnWidth(1.2),
+                  }
+                : {
+                    0: const pw.FlexColumnWidth(2.5),
+                    1: const pw.FlexColumnWidth(1.5),
+                    2: const pw.FlexColumnWidth(1.5),
+                  },
             children: [
               // Header
               pw.TableRow(
@@ -321,42 +375,64 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                               fontSize: 10,
                               color: PdfColors.white,
                               fontWeight: pw.FontWeight.bold))),
+                  if (hasC)
+                    pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text(isSpanish ? 'Oferta C' : 'Offer C',
+                            textAlign: pw.TextAlign.right,
+                            style: pw.TextStyle(
+                                fontSize: 10,
+                                color: PdfColors.white,
+                                fontWeight: pw.FontWeight.bold))),
                 ],
               ),
               row(isSpanish ? 'Salario bruto' : 'Gross Salary',
                   AmountFormatter.ui(a.grossSalary, 'USD'), AmountFormatter.ui(b.grossSalary, 'USD'),
-                  bold: true),
+                  bold: true,
+                  valC: hasC ? AmountFormatter.ui(c!.grossSalary, 'USD') : null),
               row(isSpanish ? 'Ingreso neto anual' : 'Net Take-Home (Annual)',
                   AmountFormatter.ui(a.netTakeHome, 'USD'), AmountFormatter.ui(b.netTakeHome, 'USD'),
-                  bold: true),
+                  bold: true,
+                  valC: hasC ? AmountFormatter.ui(c!.netTakeHome, 'USD') : null),
               row(isSpanish ? 'Ingreso neto mensual' : 'Net Monthly',
-                  AmountFormatter.ui(a.monthlyTakeHome, 'USD'), AmountFormatter.ui(b.monthlyTakeHome, 'USD')),
+                  AmountFormatter.ui(a.monthlyTakeHome, 'USD'), AmountFormatter.ui(b.monthlyTakeHome, 'USD'),
+                  valC: hasC ? AmountFormatter.ui(c!.monthlyTakeHome, 'USD') : null),
               row(
                   isSpanish ? 'Tasa efectiva' : 'Effective Tax Rate',
                   '${pctFmt.format(a.effectiveTaxRate)}%',
-                  '${pctFmt.format(b.effectiveTaxRate)}%'),
+                  '${pctFmt.format(b.effectiveTaxRate)}%',
+                  valC: hasC ? '${pctFmt.format(c!.effectiveTaxRate)}%' : null),
               row(isSpanish ? 'Bono anual (neto)' : 'Annual Bonus (after tax)',
-                  AmountFormatter.ui(a.bonusAfterTax, 'USD'), AmountFormatter.ui(b.bonusAfterTax, 'USD')),
-              if (a.signingBonusAfterTax > 0 || b.signingBonusAfterTax > 0)
+                  AmountFormatter.ui(a.bonusAfterTax, 'USD'), AmountFormatter.ui(b.bonusAfterTax, 'USD'),
+                  valC: hasC ? AmountFormatter.ui(c!.bonusAfterTax, 'USD') : null),
+              if (a.signingBonusAfterTax > 0 ||
+                  b.signingBonusAfterTax > 0 ||
+                  (c?.signingBonusAfterTax ?? 0) > 0)
                 row(
                     isSpanish
                         ? 'Bono contratación (neto)'
                         : 'Signing Bonus (net)',
                     AmountFormatter.ui(a.signingBonusAfterTax, 'USD'),
-                    AmountFormatter.ui(b.signingBonusAfterTax, 'USD')),
+                    AmountFormatter.ui(b.signingBonusAfterTax, 'USD'),
+                    valC: hasC ? AmountFormatter.ui(c!.signingBonusAfterTax, 'USD') : null),
               row(isSpanish ? 'Match 401k' : '401k Match',
-                  AmountFormatter.ui(a.k401kMatch, 'USD'), AmountFormatter.ui(b.k401kMatch, 'USD')),
+                  AmountFormatter.ui(a.k401kMatch, 'USD'), AmountFormatter.ui(b.k401kMatch, 'USD'),
+                  valC: hasC ? AmountFormatter.ui(c!.k401kMatch, 'USD') : null),
               row(isSpanish ? 'Beneficios de salud' : 'Health Benefits',
-                  AmountFormatter.ui(a.healthBenefits, 'USD'), AmountFormatter.ui(b.healthBenefits, 'USD')),
+                  AmountFormatter.ui(a.healthBenefits, 'USD'), AmountFormatter.ui(b.healthBenefits, 'USD'),
+                  valC: hasC ? AmountFormatter.ui(c!.healthBenefits, 'USD') : null),
               row(isSpanish ? 'RSU anual' : 'Annual RSU',
-                  AmountFormatter.ui(a.annualRsuValue, 'USD'), AmountFormatter.ui(b.annualRsuValue, 'USD')),
+                  AmountFormatter.ui(a.annualRsuValue, 'USD'), AmountFormatter.ui(b.annualRsuValue, 'USD'),
+                  valC: hasC ? AmountFormatter.ui(c!.annualRsuValue, 'USD') : null),
               row(isSpanish ? 'Costo de traslado' : 'Commute Cost',
-                  AmountFormatter.ui(a.commuteCost, 'USD'), AmountFormatter.ui(b.commuteCost, 'USD')),
+                  AmountFormatter.ui(a.commuteCost, 'USD'), AmountFormatter.ui(b.commuteCost, 'USD'),
+                  valC: hasC ? AmountFormatter.ui(c!.commuteCost, 'USD') : null),
               row(
                   isSpanish ? 'Compensación total' : 'Total Compensation',
                   AmountFormatter.ui(a.totalCompensation, 'USD'),
                   AmountFormatter.ui(b.totalCompensation, 'USD'),
-                  bold: true),
+                  bold: true,
+                  valC: hasC ? AmountFormatter.ui(c!.totalCompensation, 'USD') : null),
             ],
           ),
           pw.SizedBox(height: 20),
@@ -475,7 +551,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   Future<void> _saveToHistory(BuildContext context, bool isSpanish) async {
-    final isPremium = freemiumService.isPremium;
+    final isPremium = freemiumService.hasFullAccess;
     final limit = MonetizationConfig.freeCalculationLimit;
 
     if (!isPremium) {
@@ -1432,6 +1508,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
   }
 
   /// Estimate tax on RSU vesting (taxed as ordinary income on top of salary).
+  /// Includes marginal FICA on the RSU income (SS + Medicare on the incremental slice).
   static double _rsuTaxRate(double salary, double rsuIncome, String stateCode) {
     if (salary <= 0 && rsuIncome <= 0) return 0;
     final total = salary + rsuIncome;
@@ -1439,7 +1516,9 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
         OfferEngine.federalTax(total) + OfferEngine.stateTax(total, stateCode);
     final taxSalary = OfferEngine.federalTax(salary) +
         OfferEngine.stateTax(salary, stateCode);
-    final taxOnRsu = taxTotal - taxSalary;
+    final ficaOnRsu =
+        OfferEngine.ficaTax(salary + rsuIncome) - OfferEngine.ficaTax(salary);
+    final taxOnRsu = (taxTotal - taxSalary) + ficaOnRsu;
     return rsuIncome > 0 ? (taxOnRsu / rsuIncome) : 0;
   }
 
@@ -1450,6 +1529,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
 
     final grantA = widget.offerA.annualRsuValue * 4; // total 4-yr grant
     final grantB = widget.offerB.annualRsuValue * 4;
+    final grantC = (widget.offerC?.annualRsuValue ?? 0) * 4;
 
     return Container(
       decoration: BoxDecoration(
@@ -1520,6 +1600,15 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                       value: AmountFormatter.ui(grantB, 'USD'),
                       color: AppTheme.offerBDeep,
                     )),
+                    if (widget.offerC != null && grantC > 0) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                          child: _GrantChip(
+                        label: isSp ? 'Total concesión C' : 'Total grant C',
+                        value: AmountFormatter.ui(grantC, 'USD'),
+                        color: AppTheme.offerCDeep,
+                      )),
+                    ],
                   ]),
                   const SizedBox(height: AppSpacing.mdPlus),
                   // Vesting table header
@@ -1578,6 +1667,35 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                         taxRate: rate,
                         total: grantB,
                         color: AppTheme.offerBDeep,
+                        isSp: isSp,
+                      );
+                    }),
+                  ],
+                  // Year rows for Offer C
+                  if (widget.offerC != null && grantC > 0) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                      child: Text(
+                        isSp ? 'Oferta C' : 'Offer C',
+                        style: TextStyle(
+                            fontSize: AppTextSize.xs,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.offerCDeep),
+                      ),
+                    ),
+                    ..._schedule(grantC).map((y) {
+                      final rate = _rsuTaxRate(widget.offerC!.baseSalary,
+                          y.vested, widget.offerC!.stateCode);
+                      final netVested = y.vested * (1 - rate);
+                      return _VestRow(
+                        year: y.year,
+                        vested: y.vested,
+                        cumulative: y.cumulative,
+                        netVested: netVested,
+                        taxRate: rate,
+                        total: grantC,
+                        color: AppTheme.offerCDeep,
                         isSp: isSp,
                       );
                     }),
@@ -2116,8 +2234,8 @@ class _WealthBuildingCard extends StatelessWidget {
           ),
           child: Text(
             isSp
-                ? '* Proyecciones estimativas basadas en tasas 2026. La rentabilidad real puede variar.'
-                : '* Projections are estimates based on 2026 rates. Actual returns may vary.',
+                ? '* Proyecciones estimativas basadas en tasas 2025. La rentabilidad real puede variar.'
+                : '* Projections are estimates based on 2025 rates. Actual returns may vary.',
             style: TextStyle(
                 fontSize: AppTextSize.xs,
                 color: ct.textSecondary,
