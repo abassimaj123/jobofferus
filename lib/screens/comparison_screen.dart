@@ -2350,19 +2350,8 @@ class _ExportTile extends StatelessWidget {
             ],
           )),
           if (isPremium)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
-              decoration: BoxDecoration(
-                color: AppTheme.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: const Text('PRO',
-                  style: TextStyle(
-                      fontSize: AppTextSize.xs,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.accent)),
-            )
+            const Icon(Icons.lock_outline,
+                size: 14, color: AppTheme.accent)
           else
             Icon(Icons.chevron_right_rounded, color: ct.textSecondary),
         ]),
