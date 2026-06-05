@@ -105,14 +105,14 @@ class OfferEngine {
   }
 
   /// Annual commute cost (IRS mileage rate × 2 ways × work days).
-  /// Uses 2025 IRS standard mileage rate of $0.70/mile.
+  /// Uses 2026 IRS standard mileage rate of $0.725/mile.
   static double commuteCost({
     required double milesOneWay,
     required bool isRemote,
     int workDaysPerYear = 235, // excludes PTO + holidays
   }) {
     if (isRemote || milesOneWay <= 0) return 0;
-    const irsRate = 0.725; // IRS 2025
+    const irsRate = 0.725; // IRS 2026
     return milesOneWay * 2 * workDaysPerYear * irsRate;
   }
 

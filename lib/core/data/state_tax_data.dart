@@ -99,7 +99,7 @@ class StateTaxData {
       (double.infinity, 0.066),
     ],
     // Georgia
-    'GA': [(double.infinity, 0.0549)], // flat 5.49% (2024+)
+    'GA': [(double.infinity, 0.0539)], // flat 5.39% (2025)
     // Hawaii
     'HI': [
       (2400, 0.014),
@@ -116,14 +116,9 @@ class StateTaxData {
       (double.infinity, 0.11),
     ],
     // Idaho
-    'ID': [(double.infinity, 0.058)], // flat 5.8% (2024)
+    'ID': [(double.infinity, 0.05695)], // flat 5.695% (2024+)
     // Iowa
-    'IA': [
-      (6000, 0.044),
-      (30000, 0.0482),
-      (75000, 0.057),
-      (double.infinity, 0.060),
-    ],
+    'IA': [(double.infinity, 0.038)], // flat 3.8% (depuis jan. 2025)
     // Kansas
     'KS': [
       (15000, 0.031),
