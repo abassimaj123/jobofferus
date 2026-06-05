@@ -258,8 +258,8 @@ void main() {
           isRemote: false);
       const b = JobOffer(baseSalary: 85000, stateCode: 'TX', isRemote: true);
       final r = OfferEngine.compare(a, b);
-      // Commute cost: 40 * 2 * 235 * 0.70 = $13,160/yr → A nets much less
-      // A net TC: ~67k - 13160 = ~53.8k; B net TC: ~63.5k
+      // Commute cost: 40 * 2 * 235 * 0.725 = $13,630/yr → A nets much less (IRS 2026)
+      // A net TC: ~67k - 13630 = ~53.4k; B net TC: ~63.5k
       expect(r.resultB.totalCompensation,
           greaterThan(r.resultA.totalCompensation));
     });
