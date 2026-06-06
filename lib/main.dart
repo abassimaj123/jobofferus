@@ -8,7 +8,8 @@ import 'package:calcwise_core/calcwise_core.dart'
         CalcwiseAdFooter,
         CalcwiseRewardAdSheet,
         CalcwiseRemoteConfig,
-        requestCalcwiseConsent;
+        requestCalcwiseConsent,
+        SmartHistoryService;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/firebase/firebase_options.dart';
 import 'core/freemium/freemium_service.dart';
 import 'core/freemium/iap_service.dart';
+import 'core/db/job_offer_us_database_adapter.dart';
 import 'core/ads/ad_config.dart';
 import 'core/services/analytics_service.dart';
 import 'core/language/language_notifier.dart';
@@ -40,6 +42,12 @@ final adService = CalcwiseAdService(
 final paywallSession = PaywallSessionService(
   appKey: 'joboffer',
   hasFullAccess: () => freemiumService.hasFullAccess,
+);
+
+/// SmartHistory ring buffer + pinned scenarios service.
+final smartHistoryService = SmartHistoryService(
+  db: JobOfferUSDatabaseAdapter(),
+  freemium: freemiumService,
 );
 
 void main() async {

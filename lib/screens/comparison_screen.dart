@@ -22,9 +22,10 @@ import '../widgets/paywall_soft.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:share_plus/share_plus.dart';
-import '../main.dart' show adService;
+import '../main.dart' show adService, smartHistoryService;
 import 'history_screen.dart';
 import '../core/engines/offer_engine.dart' show OfferEngine;
+import '../widgets/save_scenario_button.dart';
 
 class ComparisonScreen extends StatefulWidget {
   final JobOffer offerA;
@@ -46,6 +47,154 @@ class ComparisonScreen extends StatefulWidget {
 
 class _ComparisonScreenState extends State<ComparisonScreen> {
   bool _saved = false;
+
+  static const _appKey = 'jobofferus';
+  static const _screenId = 'calculator';
+
+  @override
+  void initState() {
+    super.initState();
+    // SmartHistory auto-save (5s debounce + hash dedup + ring buffer).
+    final snap = _buildSnapshot();
+    smartHistoryService.scheduleAutoSave(
+      appKey: _appKey,
+      screenId: _screenId,
+      inputHash: snap.hash,
+      l1: snap.l1,
+      l2: snap.l2,
+    );
+  }
+
+  @override
+  void dispose() {
+    smartHistoryService.cancelPendingSave(_appKey, _screenId);
+    super.dispose();
+  }
+
+  /// Deterministic hash of the key inputs across all offers in this comparison.
+  String _inputHash() {
+    final o = <JobOffer>[
+      widget.offerA,
+      widget.offerB,
+      if (widget.offerC != null) widget.offerC!,
+    ];
+    final map = <String, dynamic>{};
+    for (var i = 0; i < o.length; i++) {
+      map['base_$i'] = ResultHasher.roundTo(o[i].baseSalary, 1000);
+      map['state_$i'] = o[i].stateCode;
+      map['city_$i'] = o[i].city;
+      map['bonus_$i'] = ResultHasher.roundTo(o[i].bonusPct, 0.5);
+      map['signing_$i'] = ResultHasher.roundTo(o[i].signingBonus, 1000);
+      map['rsu_$i'] = ResultHasher.roundTo(o[i].annualRsuValue, 1000);
+    }
+    map['count'] = o.length;
+    return ResultHasher.hashMixed(map);
+  }
+
+  /// Builds the full SmartHistory snapshot (hash + l1 list summary + l2 full
+  /// comparison snapshot) for the current comparison.
+  ({String hash, Map<String, dynamic> l1, Map<String, dynamic> l2})
+      _buildSnapshot() {
+    final a = widget.result.resultA;
+    final b = widget.result.resultB;
+    final c = widget.result.resultC;
+    final winner = widget.result.winner;
+    final winnerResult = widget.result.winnerResult;
+    final winnerOffer = winner == Winner.offerA
+        ? widget.offerA
+        : winner == Winner.offerC
+            ? (widget.offerC ?? widget.offerA)
+            : widget.offerB;
+
+    Map<String, dynamic> offerJson(JobOffer o, OfferResult r) => {
+          'label': o.label,
+          'company': o.company,
+          'city': o.city,
+          'state': o.stateCode,
+          'remote': o.isRemote,
+          'base': o.baseSalary,
+          'bonus_pct': o.bonusPct,
+          'signing': o.signingBonus,
+          'rsu': o.annualRsuValue,
+          'pto': o.ptoDays,
+          'k401k_match_pct': o.k401kMatchPct,
+          'commute_miles': o.commuteMilesPerDay,
+          'health_savings': o.healthInsuranceSavings + o.dentalVisionSavings,
+          'gross': r.grossSalary,
+          'federal': r.federalTax,
+          'state_tax': r.stateTax,
+          'local_tax': r.localTax,
+          'fica': r.ficaTax,
+          'total_tax': r.totalTax,
+          'tax_rate': r.effectiveTaxRate,
+          'net': r.netTakeHome,
+          'monthly': r.monthlyTakeHome,
+          'bonus_net': r.bonusAfterTax,
+          'annual_bonus': r.annualBonus,
+          'signing_net': r.signingBonusAfterTax,
+          'k401k_match_usd': r.k401kMatch,
+          'health': r.healthBenefits,
+          'pto_value': r.ptoValue,
+          'rsu_value': r.annualRsuValue,
+          'commute_cost': r.commuteCost,
+          'total_comp': r.totalCompensation,
+          'col_adj': r.colAdjustedTakeHome,
+          '5yr': r.fiveYearProjection,
+          'cumulative_5yr': r.cumulativeComp5Yr,
+          'k401k_wealth_65': r.k401kWealthAt65,
+          'net_wealth_5yr': r.netWealthAfter5Yrs,
+        };
+
+    final compJson = jsonEncode({
+      'v': 2,
+      'winner': winner == Winner.offerA
+          ? 'A'
+          : winner == Winner.offerB
+              ? 'B'
+              : winner == Winner.offerC
+                  ? 'C'
+                  : 'tie',
+      'advantage': widget.result.annualAdvantage,
+      'break_even_months': widget.result.breakEvenMonths,
+      'offers': [
+        offerJson(widget.offerA, a),
+        offerJson(widget.offerB, b),
+        if (widget.offerC != null && c != null) offerJson(widget.offerC!, c),
+      ],
+      'categories':
+          widget.result.categoryWinners.map((k, v) => MapEntry(k, v.name)),
+    });
+
+    final jobTitle = '${widget.offerA.label} vs ${widget.offerB.label}'
+        '${widget.offerC != null ? ' vs ${widget.offerC!.label}' : ''}';
+
+    final l1 = <String, dynamic>{
+      'job_title': jobTitle,
+      'company': winnerOffer.company,
+      'net_salary': winnerResult.netTakeHome,
+      'monthly_net': winnerResult.monthlyTakeHome,
+      'tax_rate': winnerResult.effectiveTaxRate,
+    };
+
+    final l2 = <String, dynamic>{
+      'job_title': jobTitle,
+      'company': winnerOffer.company,
+      'location': winnerOffer.city,
+      'salary': winnerOffer.baseSalary,
+      'bonus': winnerResult.annualBonus,
+      'benefits': winnerResult.healthBenefits,
+      'stock_options': winnerResult.annualRsuValue,
+      'relocation': 0.0,
+      'pto': winnerOffer.ptoDays,
+      'signing_bonus': winnerOffer.signingBonus,
+      'net_salary': winnerResult.netTakeHome,
+      'monthly_net': winnerResult.monthlyTakeHome,
+      'tax_rate': winnerResult.effectiveTaxRate,
+      'comparison_json': compJson,
+    };
+
+    return (hash: _inputHash(), l1: l1, l2: l2);
+  }
 
   Future<void> _onExportCsv(bool isSpanish) async {
     HapticFeedback.mediumImpact();
@@ -550,24 +699,32 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     );
   }
 
-  Future<void> _saveToHistory(BuildContext context, bool isSpanish) async {
+  /// Save the current comparison as a pinned scenario via SmartHistory.
+  ///
+  /// [label] is null for free users (name dialog gated to premium by the
+  /// SaveScenarioButton). Free users are capped at
+  /// [MonetizationConfig.freePinnedLimit] pinned scenarios — once full a
+  /// soft paywall is shown instead of evicting silently.
+  Future<void> _saveScenario(String? label) async {
+    final isSpanish = isSpanishNotifier.value;
     final isPremium = freemiumService.hasFullAccess;
-    final limit = MonetizationConfig.freeCalculationLimit;
 
     if (!isPremium) {
-      final count = await DatabaseHelper.instance.countHistory();
-      if (count >= limit) {
-        if (!context.mounted) return;
+      final pinnedCount =
+          await DatabaseHelper.instance.countHistory(isPinned: true);
+      if (pinnedCount >= MonetizationConfig.freePinnedLimit) {
+        if (!mounted) return;
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
           builder: (_) => PaywallSoft(
-            featureTitle:
-                isSpanish ? 'Historial ilimitado' : 'Unlimited history',
+            featureTitle: isSpanish
+                ? 'Escenarios guardados ilimitados'
+                : 'Unlimited saved scenarios',
             featureSubtitle: isSpanish
-                ? 'Guarda todas tus comparaciones sin límite'
-                : 'Save all your comparisons without limit',
+                ? 'Guarda y nombra todas tus comparaciones sin límite'
+                : 'Save and name all your comparisons without limit',
             isSpanish: isSpanish,
             onUnlock: () {
               Navigator.pop(context);
@@ -579,118 +736,25 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       }
     }
 
-    final now = DateTime.now().toUtc().toIso8601String();
-    final a = widget.result.resultA;
-    final b = widget.result.resultB;
-    final c = widget.result.resultC;
-    final winner = widget.result.winner;
-    final winnerResult = widget.result.winnerResult;
-    final winnerOffer = winner == Winner.offerA
-        ? widget.offerA
-        : winner == Winner.offerC
-            ? (widget.offerC ?? widget.offerA)
-            : widget.offerB;
-
-    // Build full comparison JSON
-    Map<String, dynamic> offerJson(JobOffer o, OfferResult r) => {
-          'label': o.label,
-          'company': o.company,
-          'city': o.city,
-          'state': o.stateCode,
-          'remote': o.isRemote,
-          'base': o.baseSalary,
-          'bonus_pct': o.bonusPct,
-          'signing': o.signingBonus,
-          'rsu': o.annualRsuValue,
-          'pto': o.ptoDays,
-          'k401k_match_pct': o.k401kMatchPct,
-          'commute_miles': o.commuteMilesPerDay,
-          'health_savings': o.healthInsuranceSavings + o.dentalVisionSavings,
-          // computed
-          'gross': r.grossSalary,
-          'federal': r.federalTax,
-          'state_tax': r.stateTax,
-          'local_tax': r.localTax,
-          'fica': r.ficaTax,
-          'total_tax': r.totalTax,
-          'tax_rate': r.effectiveTaxRate,
-          'net': r.netTakeHome,
-          'monthly': r.monthlyTakeHome,
-          'bonus_net': r.bonusAfterTax,
-          'annual_bonus': r.annualBonus,
-          'signing_net': r.signingBonusAfterTax,
-          'k401k_match_usd': r.k401kMatch,
-          'health': r.healthBenefits,
-          'pto_value': r.ptoValue,
-          'rsu_value': r.annualRsuValue,
-          'commute_cost': r.commuteCost,
-          'total_comp': r.totalCompensation,
-          'col_adj': r.colAdjustedTakeHome,
-          '5yr': r.fiveYearProjection,
-          'cumulative_5yr': r.cumulativeComp5Yr,
-          'k401k_wealth_65': r.k401kWealthAt65,
-          'net_wealth_5yr': r.netWealthAfter5Yrs,
-        };
-
-    final compJson = jsonEncode({
-      'v': 2,
-      'winner': winner == Winner.offerA
-          ? 'A'
-          : winner == Winner.offerB
-              ? 'B'
-              : winner == Winner.offerC
-                  ? 'C'
-                  : 'tie',
-      'advantage': widget.result.annualAdvantage,
-      'break_even_months': widget.result.breakEvenMonths,
-      'offers': [
-        offerJson(widget.offerA, a),
-        offerJson(widget.offerB, b),
-        if (widget.offerC != null && c != null)
-          offerJson(widget.offerC!, c),
-      ],
-      'categories': widget.result.categoryWinners
-          .map((k, v) => MapEntry(k, v.name)),
-    });
-
+    final snap = _buildSnapshot();
     try {
-      // Save ONE row per comparison (not two separate rows)
-      await DatabaseHelper.instance.insertHistory({
-        'job_title': '${widget.offerA.label} vs ${widget.offerB.label}'
-            '${widget.offerC != null ? ' vs ${widget.offerC!.label}' : ''}',
-        'company': winnerOffer.company,
-        'location': winnerOffer.city,
-        'salary': winnerOffer.baseSalary,
-        'bonus': winnerResult.annualBonus,
-        'benefits': winnerResult.healthBenefits,
-        'stock_options': winnerResult.annualRsuValue,
-        'relocation': 0.0,
-        'pto': winnerOffer.ptoDays,
-        'signing_bonus': winnerOffer.signingBonus,
-        'net_salary': winnerResult.netTakeHome,
-        'monthly_net': winnerResult.monthlyTakeHome,
-        'tax_rate': winnerResult.effectiveTaxRate,
-        'created_at': now,
-        'comparison_json': compJson,
-      });
+      await smartHistoryService.saveScenario(
+        appKey: _appKey,
+        screenId: _screenId,
+        inputHash: snap.hash,
+        l1: snap.l1,
+        l2: snap.l2,
+        label: label,
+      );
 
       adService.onSave();
       AnalyticsService.instance.logResultSaved();
       HistoryScreen.refreshNotifier.value++;
 
-      if (!context.mounted) return;
+      if (!mounted) return;
       setState(() => _saved = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isSpanish ? 'Comparación guardada ✓' : 'Comparison saved ✓',
-          ),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     } catch (_) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(isSpanish ? 'Error al guardar' : 'Failed to save'),
@@ -715,19 +779,6 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             ),
             leading: const BackButton(),
             actions: [
-              IconButton(
-                icon: Icon(
-                  _saved ? Icons.bookmark_rounded : Icons.bookmark_add_rounded,
-                  color: _saved ? AppTheme.primary : null,
-                ),
-                onPressed: _saved
-                    ? null
-                    : () {
-                        HapticFeedback.mediumImpact();
-                        _saveToHistory(context, isSpanish);
-                      },
-                tooltip: isSpanish ? 'Guardar' : 'Save',
-              ),
               IconButton(
                 icon: const Icon(Icons.ios_share_rounded),
                 tooltip: isSpanish ? 'Exportar' : 'Export',
@@ -1104,6 +1155,21 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             _NegotiationTipsCard(result: widget.result, isSpanish: isSpanish),
           if (!widget.result.isTie && !has3)
             const SizedBox(height: AppSpacing.md),
+
+          // ── Save scenario ──────────────────────────────────────────────
+          SizedBox(
+            width: double.infinity,
+            child: _saved
+                ? OutlinedButton.icon(
+                    onPressed: null,
+                    icon: Icon(Icons.bookmark_rounded,
+                        size: 18, color: AppTheme.primary),
+                    label: Text(isSpanish ? 'Escenario guardado' : 'Scenario saved'),
+                  )
+                : SaveScenarioButton(
+                    onSave: _saveScenario, isSpanish: isSpanish),
+          ),
+          const SizedBox(height: AppSpacing.md),
 
           // ── Share / PDF CTA ────────────────────────────────────────────
           if (isPremium)
