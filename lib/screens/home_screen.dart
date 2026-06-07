@@ -11,7 +11,8 @@ import '../core/models/job_offer.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/offer_form_card.dart';
 import '../widgets/paywall_hard.dart';
-import '../main.dart' show paywallSession, isSpanishNotifier;
+import '../main.dart' show paywallSession, isSpanishNotifier, smartHistoryService;
+import '../widgets/save_scenario_button.dart';
 import 'comparison_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
@@ -40,7 +41,66 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _debounce;
   bool _wasPremium = false;
 
+  static const _appKey = 'jobofferus';
+  static const _screenId = 'home';
+
   bool get _canCompare => _offerA.baseSalary > 0 && _offerB.baseSalary > 0 && (!_showOfferC || _offerC.baseSalary > 0);
+
+  /// Deterministic hash of the current offer inputs (rounded to ±5000).
+  String _inputHash() {
+    final map = <String, dynamic>{
+      'base_a': ResultHasher.roundTo(_offerA.baseSalary, 5000),
+      'state_a': _offerA.stateCode,
+      'base_b': ResultHasher.roundTo(_offerB.baseSalary, 5000),
+      'state_b': _offerB.stateCode,
+    };
+    if (_showOfferC && _offerC.baseSalary > 0) {
+      map['base_c'] = ResultHasher.roundTo(_offerC.baseSalary, 5000);
+      map['state_c'] = _offerC.stateCode;
+    }
+    return ResultHasher.hashMixed(map);
+  }
+
+  Map<String, dynamic> _l1Snapshot() => {
+        'offer_a': '${_offerA.label} · \$${_offerA.baseSalary.round()} · ${_offerA.stateCode}',
+        'offer_b': '${_offerB.label} · \$${_offerB.baseSalary.round()} · ${_offerB.stateCode}',
+        if (_showOfferC && _offerC.baseSalary > 0)
+          'offer_c': '${_offerC.label} · \$${_offerC.baseSalary.round()} · ${_offerC.stateCode}',
+      };
+
+  Map<String, dynamic> _l2Snapshot() => {
+        'offer_a': {
+          'label': _offerA.label,
+          'company': _offerA.company,
+          'base_salary': _offerA.baseSalary,
+          'state': _offerA.stateCode,
+          'city': _offerA.city,
+          'bonus_pct': _offerA.bonusPct,
+          'signing_bonus': _offerA.signingBonus,
+          'rsu': _offerA.annualRsuValue,
+        },
+        'offer_b': {
+          'label': _offerB.label,
+          'company': _offerB.company,
+          'base_salary': _offerB.baseSalary,
+          'state': _offerB.stateCode,
+          'city': _offerB.city,
+          'bonus_pct': _offerB.bonusPct,
+          'signing_bonus': _offerB.signingBonus,
+          'rsu': _offerB.annualRsuValue,
+        },
+        if (_showOfferC && _offerC.baseSalary > 0)
+          'offer_c': {
+            'label': _offerC.label,
+            'company': _offerC.company,
+            'base_salary': _offerC.baseSalary,
+            'state': _offerC.stateCode,
+            'city': _offerC.city,
+            'bonus_pct': _offerC.bonusPct,
+            'signing_bonus': _offerC.signingBonus,
+            'rsu': _offerC.annualRsuValue,
+          },
+      };
 
   @override
   void initState() {
@@ -58,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     iapErrorNotifier.removeListener(_onIapError);
     freemiumService.isPremiumNotifier.removeListener(_onPremiumChange);
     _debounce?.cancel();
+    smartHistoryService.cancelPendingSave(_appKey, _screenId);
     super.dispose();
   }
 
@@ -108,6 +169,13 @@ class _HomeScreenState extends State<HomeScreen> {
     AnalyticsService.instance.logOfferCompared();
     final offerCForCompare = _showOfferC ? _offerC : null;
     final result = OfferEngine.compare(_offerA, _offerB, offerCForCompare);
+    smartHistoryService.scheduleAutoSave(
+      appKey: _appKey,
+      screenId: _screenId,
+      inputHash: _inputHash(),
+      l1: _l1Snapshot(),
+      l2: _l2Snapshot(),
+    );
     if (!mounted) return;
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (_, __, ___) => ComparisonScreen(
@@ -216,22 +284,49 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _compareFab(bool isSp) {
     final active = _canCompare;
-    return FloatingActionButton.extended(
-      onPressed: active ? _debouncedCompare : null,
-      backgroundColor:
-          active ? AppTheme.primary : AppTheme.primary.withValues(alpha: 0.45),
-      elevation: active ? 6 : 1,
-      icon: Icon(Icons.compare_arrows_rounded,
-          color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
-          size: 22),
-      label: Text(
-        isSp ? 'Comparar ofertas' : 'Compare Offers',
-        style: TextStyle(
-          color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
-          fontWeight: FontWeight.w700,
-          fontSize: AppTextSize.md,
+    final canSave =
+        active && (freemiumService.hasFullAccess || freemiumService.isRewarded);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (canSave) ...[
+          SaveScenarioButton(
+            isSpanish: isSp,
+            onSave: (label) async {
+              await smartHistoryService.saveScenario(
+                appKey: _appKey,
+                screenId: _screenId,
+                inputHash: _inputHash(),
+                l1: _l1Snapshot(),
+                l2: _l2Snapshot(),
+                label: label,
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        FloatingActionButton.extended(
+          onPressed: active ? _debouncedCompare : null,
+          backgroundColor: active
+              ? AppTheme.primary
+              : AppTheme.primary.withValues(alpha: 0.45),
+          elevation: active ? 6 : 1,
+          icon: Icon(Icons.compare_arrows_rounded,
+              color:
+                  active ? Colors.white : Colors.white.withValues(alpha: 0.5),
+              size: 22),
+          label: Text(
+            isSp ? 'Comparar ofertas' : 'Compare Offers',
+            style: TextStyle(
+              color:
+                  active ? Colors.white : Colors.white.withValues(alpha: 0.5),
+              fontWeight: FontWeight.w700,
+              fontSize: AppTextSize.md,
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
