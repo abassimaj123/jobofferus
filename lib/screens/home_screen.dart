@@ -8,6 +8,7 @@ import '../core/language/language_notifier.dart';
 import '../core/freemium/iap_service.dart';
 import '../core/services/analytics_service.dart';
 import '../core/models/job_offer.dart';
+import '../core/models/comparison_result.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/offer_form_card.dart';
 import '../widgets/paywall_hard.dart';
@@ -61,46 +62,64 @@ class _HomeScreenState extends State<HomeScreen> {
     return ResultHasher.hashMixed(map);
   }
 
-  Map<String, dynamic> _l1Snapshot() => {
-        'offer_a': '${_offerA.label} · \$${_offerA.baseSalary.round()} · ${_offerA.stateCode}',
-        'offer_b': '${_offerB.label} · \$${_offerB.baseSalary.round()} · ${_offerB.stateCode}',
-        if (_showOfferC && _offerC.baseSalary > 0)
-          'offer_c': '${_offerC.label} · \$${_offerC.baseSalary.round()} · ${_offerC.stateCode}',
-      };
+  Map<String, dynamic> _l1Snapshot() {
+    final result = OfferEngine.compare(
+      _offerA,
+      _offerB,
+      _showOfferC && _offerC.baseSalary > 0 ? _offerC : null,
+    );
+    return {
+      'offer_a_salary': _offerA.baseSalary,
+      'offer_b_salary': _offerB.baseSalary,
+      'offer_a_total': result.resultA.totalCompensation,
+      'offer_b_total': result.resultB.totalCompensation,
+      if (_showOfferC && _offerC.baseSalary > 0) ...{
+        'offer_c_salary': _offerC.baseSalary,
+        'offer_c_total': result.resultC?.totalCompensation ?? 0.0,
+      },
+    };
+  }
 
-  Map<String, dynamic> _l2Snapshot() => {
-        'offer_a': {
-          'label': _offerA.label,
-          'company': _offerA.company,
-          'base_salary': _offerA.baseSalary,
-          'state': _offerA.stateCode,
-          'city': _offerA.city,
-          'bonus_pct': _offerA.bonusPct,
-          'signing_bonus': _offerA.signingBonus,
-          'rsu': _offerA.annualRsuValue,
-        },
-        'offer_b': {
-          'label': _offerB.label,
-          'company': _offerB.company,
-          'base_salary': _offerB.baseSalary,
-          'state': _offerB.stateCode,
-          'city': _offerB.city,
-          'bonus_pct': _offerB.bonusPct,
-          'signing_bonus': _offerB.signingBonus,
-          'rsu': _offerB.annualRsuValue,
-        },
-        if (_showOfferC && _offerC.baseSalary > 0)
-          'offer_c': {
-            'label': _offerC.label,
-            'company': _offerC.company,
-            'base_salary': _offerC.baseSalary,
-            'state': _offerC.stateCode,
-            'city': _offerC.city,
-            'bonus_pct': _offerC.bonusPct,
-            'signing_bonus': _offerC.signingBonus,
-            'rsu': _offerC.annualRsuValue,
-          },
-      };
+  Map<String, dynamic> _l2Snapshot() {
+    final offerCActive = _showOfferC && _offerC.baseSalary > 0;
+    Map<String, dynamic> offerInputs(JobOffer o) => {
+          'label': o.label,
+          'company': o.company,
+          'base_salary': o.baseSalary,
+          'state': o.stateCode,
+          'city': o.city,
+          'bonus_pct': o.bonusPct,
+          'signing_bonus': o.signingBonus,
+          'rsu': o.annualRsuValue,
+        };
+    final result = OfferEngine.compare(
+      _offerA,
+      _offerB,
+      offerCActive ? _offerC : null,
+    );
+    final winner = result.winner;
+    return {
+      'inputs': {
+        'offerA': offerInputs(_offerA),
+        'offerB': offerInputs(_offerB),
+        if (offerCActive) 'offerC': offerInputs(_offerC),
+      },
+      'results': {
+        'winner': winner == Winner.offerA
+            ? 'A'
+            : winner == Winner.offerB
+                ? 'B'
+                : winner == Winner.offerC
+                    ? 'C'
+                    : 'tie',
+        'difference': result.annualAdvantage,
+        'offer_a_total': result.resultA.totalCompensation,
+        'offer_b_total': result.resultB.totalCompensation,
+        if (offerCActive)
+          'offer_c_total': result.resultC?.totalCompensation ?? 0.0,
+      },
+    };
+  }
 
   @override
   void initState() {

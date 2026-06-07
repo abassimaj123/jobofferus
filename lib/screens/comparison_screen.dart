@@ -161,28 +161,32 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
         '${widget.offerC != null ? ' vs ${widget.offerC!.label}' : ''}';
 
     final l1 = <String, dynamic>{
-      'job_title': jobTitle,
-      'company': winnerOffer.company,
-      'net_salary': winnerResult.netTakeHome,
-      'monthly_net': winnerResult.monthlyTakeHome,
-      'tax_rate': winnerResult.effectiveTaxRate,
+      'winner_salary': winnerOffer.baseSalary,
+      'winner_net': winnerResult.netTakeHome,
+      'winner_monthly': winnerResult.monthlyTakeHome,
+      'winner_total_comp': winnerResult.totalCompensation,
+      'annual_advantage': widget.result.annualAdvantage,
     };
 
     final l2 = <String, dynamic>{
-      'job_title': jobTitle,
-      'company': winnerOffer.company,
-      'location': winnerOffer.city,
-      'salary': winnerOffer.baseSalary,
-      'bonus': winnerResult.annualBonus,
-      'benefits': winnerResult.healthBenefits,
-      'stock_options': winnerResult.annualRsuValue,
-      'relocation': 0.0,
-      'pto': winnerOffer.ptoDays,
-      'signing_bonus': winnerOffer.signingBonus,
-      'net_salary': winnerResult.netTakeHome,
-      'monthly_net': winnerResult.monthlyTakeHome,
-      'tax_rate': winnerResult.effectiveTaxRate,
-      'comparison_json': compJson,
+      'inputs': {
+        'offerA': offerJson(widget.offerA, a),
+        'offerB': offerJson(widget.offerB, b),
+        if (widget.offerC != null && c != null)
+          'offerC': offerJson(widget.offerC!, c),
+      },
+      'results': {
+        'winner': winner == Winner.offerA
+            ? 'A'
+            : winner == Winner.offerB
+                ? 'B'
+                : winner == Winner.offerC
+                    ? 'C'
+                    : 'tie',
+        'advantage': widget.result.annualAdvantage,
+        'break_even_months': widget.result.breakEvenMonths,
+        'comparison_json': compJson,
+      },
     };
 
     return (hash: _inputHash(), l1: l1, l2: l2);
@@ -1174,8 +1178,10 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                         size: 18, color: AppTheme.primary),
                     label: Text(isSpanish ? 'Escenario guardado' : 'Scenario saved'),
                   )
-                : SaveScenarioButton(
-                    onSave: _saveScenario, isSpanish: isSpanish),
+                : (freemiumService.hasFullAccess || freemiumService.isRewarded)
+                    ? SaveScenarioButton(
+                        onSave: _saveScenario, isSpanish: isSpanish)
+                    : const SizedBox.shrink(),
           ),
           const SizedBox(height: AppSpacing.md),
 
