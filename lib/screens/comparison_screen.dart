@@ -6,6 +6,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import '../core/data/salary_benchmark_data.dart';
 import '../core/db/database_helper.dart';
 import '../core/engines/insight_engine.dart';
 import '../core/freemium/iap_service.dart';
@@ -857,6 +858,22 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                 offerC: widget.offerC,
                 isSpanish: isSpanish),
           ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // ── Salary benchmark callout ───────────────────────────────────
+          Builder(builder: (_) {
+            final winner = widget.result.winner;
+            final winnerOffer = winner == Winner.offerA
+                ? widget.offerA
+                : winner == Winner.offerC
+                    ? (widget.offerC ?? widget.offerA)
+                    : widget.offerB;
+            return _BenchmarkCallout(
+              salary: winnerOffer.baseSalary,
+              stateCode: winnerOffer.stateCode,
+              isSpanish: isSpanish,
+            );
+          }),
           const SizedBox(height: AppSpacing.lg),
 
           // ── Offer labels header ────────────────────────────────────────
@@ -2357,6 +2374,90 @@ class _MiniBar extends StatelessWidget {
               color: color,
               fontWeight: FontWeight.w700)),
     ]);
+  }
+}
+
+// ── Salary benchmark callout ─────────────────────────────────────────────────
+
+class _BenchmarkCallout extends StatelessWidget {
+  final double salary;
+  final String stateCode;
+  final bool isSpanish;
+  const _BenchmarkCallout({
+    required this.salary,
+    required this.stateCode,
+    required this.isSpanish,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (salary <= 0) return const SizedBox.shrink();
+
+    final median = SalaryBenchmarkData.median(stateCode);
+    final pctDiff = ((salary - median) / median) * 100;
+    final absDiff = pctDiff.abs().round();
+
+    final Color chipColor;
+    final IconData icon;
+    final String label;
+
+    if (pctDiff >= 10) {
+      chipColor = AppTheme.successGreen;
+      icon = Icons.trending_up_rounded;
+      label = isSpanish
+          ? '+$absDiff% sobre la mediana estatal ($stateCode \$${(median / 1000).round()}k)'
+          : '+$absDiff% above $stateCode state median (\$${(median / 1000).round()}k)';
+    } else if (pctDiff <= -10) {
+      chipColor = AppTheme.errorRed;
+      icon = Icons.trending_down_rounded;
+      label = isSpanish
+          ? '${absDiff}% bajo la mediana estatal ($stateCode \$${(median / 1000).round()}k)'
+          : '${absDiff}% below $stateCode state median (\$${(median / 1000).round()}k)';
+    } else {
+      chipColor = AppTheme.warningOrange;
+      icon = Icons.remove_rounded;
+      label = isSpanish
+          ? 'Cerca de la mediana estatal ($stateCode \$${(median / 1000).round()}k, ${pctDiff >= 0 ? '+' : ''}${pctDiff.round()}%)'
+          : 'Near $stateCode state median (\$${(median / 1000).round()}k, ${pctDiff >= 0 ? '+' : ''}${pctDiff.round()}%)';
+    }
+
+    return Semantics(
+      label: label,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.smPlus),
+        decoration: BoxDecoration(
+          color: chipColor.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: chipColor.withValues(alpha: 0.3)),
+        ),
+        child: Row(children: [
+          Icon(Icons.bar_chart_rounded, size: 14, color: chipColor),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            isSpanish ? 'BLS 2025 — ' : 'BLS 2025 — ',
+            style: TextStyle(
+                fontSize: AppTextSize.xs,
+                color: chipColor.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w600),
+          ),
+          Icon(icon, size: 13, color: chipColor),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: AppTextSize.xs,
+                color: chipColor,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ]),
+      ),
+    );
   }
 }
 
