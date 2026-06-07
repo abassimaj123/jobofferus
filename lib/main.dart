@@ -40,7 +40,7 @@ final adService = CalcwiseAdService(
 );
 
 final paywallSession = PaywallSessionService(
-  appKey: 'joboffer',
+  appKey: 'jobofferus',
   hasFullAccess: () => freemiumService.hasFullAccess,
 );
 
