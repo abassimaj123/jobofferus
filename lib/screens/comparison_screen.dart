@@ -50,26 +50,16 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   bool _saved = false;
 
   static const _appKey = 'jobofferus';
-  static const _screenId = 'calculator';
+  static const _screenId = 'comparison';
 
   @override
   void initState() {
     super.initState();
     AnalyticsService.instance.logScreenView('comparison');
-    // SmartHistory auto-save (5s debounce + hash dedup + ring buffer).
-    final snap = _buildSnapshot();
-    smartHistoryService.scheduleAutoSave(
-      appKey: _appKey,
-      screenId: _screenId,
-      inputHash: snap.hash,
-      l1: snap.l1,
-      l2: snap.l2,
-    );
   }
 
   @override
   void dispose() {
-    smartHistoryService.cancelPendingSave(_appKey, _screenId);
     super.dispose();
   }
 
