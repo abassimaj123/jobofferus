@@ -30,6 +30,12 @@ class HistoryDetailScreen extends StatefulWidget {
 class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   bool _exporting = false;
 
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView('history_detail');
+  }
+
   // ── Parse comparison JSON if present ────────────────────────────────────────
   Map<String, dynamic>? get _compJson {
     final raw = widget.row['comparison_json'] as String?;

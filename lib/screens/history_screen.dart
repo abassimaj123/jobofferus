@@ -7,6 +7,7 @@ import '../core/freemium/freemium_service.dart';
 import '../core/freemium/iap_service.dart';
 import '../core/language/language_notifier.dart';
 import '../core/theme/app_theme.dart';
+import '../core/services/analytics_service.dart';
 import '../main.dart' show smartHistoryService;
 import 'history_detail_screen.dart';
 
@@ -31,6 +32,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('history');
     _load();
     HistoryScreen.refreshNotifier.addListener(_silentRefresh);
   }

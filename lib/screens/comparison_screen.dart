@@ -54,6 +54,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView('comparison');
     // SmartHistory auto-save (5s debounce + hash dedup + ring buffer).
     final snap = _buildSnapshot();
     smartHistoryService.scheduleAutoSave(

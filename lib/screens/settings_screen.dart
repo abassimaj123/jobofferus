@@ -5,10 +5,22 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/language/language_notifier.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/freemium/iap_service.dart';
+import '../core/services/analytics_service.dart';
 import '../core/theme/app_theme.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView('settings');
+  }
 
   Future<void> _setSpanish(bool value) async {
     isSpanishNotifier.value = value;

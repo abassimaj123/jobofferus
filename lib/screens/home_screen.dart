@@ -553,7 +553,7 @@ class _HeroBanner extends StatelessWidget {
               child: Row(mainAxisSize: MainAxisSize.min, children: const [
                 Icon(Icons.verified_rounded, color: AppTheme.accent, size: 13),
                 SizedBox(width: AppSpacing.xs),
-                Text('2025',
+                Text('2026',
                     style: TextStyle(
                         color: AppTheme.accent,
                         fontSize: AppTextSize.sm,
