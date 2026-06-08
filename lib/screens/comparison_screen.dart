@@ -893,7 +893,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           const SizedBox(height: AppSpacing.lg),
 
           // ── Core comparison card ───────────────────────────────────────
-          _SectionCard(
+          SectionCard(
             title: isSpanish ? 'Salario Neto' : 'After-Tax Income',
             children: [
               bar(
@@ -925,7 +925,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           const SizedBox(height: AppSpacing.md),
 
           // ── Tax breakdown ──────────────────────────────────────────────
-          _SectionCard(
+          SectionCard(
             title: isSpanish ? 'Desglose de Impuestos' : 'Tax Breakdown',
             children: [
               bar(
@@ -958,7 +958,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           const SizedBox(height: AppSpacing.md),
 
           // ── Benefits & extras ──────────────────────────────────────────
-          _SectionCard(
+          SectionCard(
             title: isSpanish ? 'Beneficios y Extras' : 'Benefits & Extras',
             children: [
               if (a.annualBonus > 0 ||
@@ -1055,11 +1055,10 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           ],
 
           // ── Total compensation ─────────────────────────────────────────
-          _SectionCard(
+          SectionCard(
             title: isSpanish
                 ? 'Compensación Total Neta'
                 : 'Net Total Compensation',
-            highlight: true,
             children: [
               bar(
                 label: isSpanish ? 'Total anual neto' : 'Total annual net',
@@ -1081,7 +1080,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
           // ── CoL-adjusted (Premium) ─────────────────────────────────────
           if (isPremium) ...[
-            _SectionCard(
+            SectionCard(
               title: isSpanish
                   ? 'Poder Adquisitivo Real'
                   : 'Real Purchasing Power (CoL-adjusted)',
@@ -1372,8 +1371,8 @@ class _OfferChip extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           child: Center(
               child: Text(letter,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: AppTextSize.xs,
                       fontWeight: FontWeight.w800))),
         ),
@@ -1401,63 +1400,6 @@ class _OfferChip extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  final bool highlight;
-  const _SectionCard({
-    required this.title,
-    required this.children,
-    this.highlight = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final ct = CalcwiseTheme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(
-          color: highlight
-              ? AppTheme.primary.withValues(alpha: 0.4)
-              : ct.cardBorder,
-          width: highlight ? 1.5 : 1,
-        ),
-        boxShadow: highlight
-            ? [
-                BoxShadow(
-                  color: AppTheme.primary.withValues(alpha: 0.2),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.mdPlus, AppSpacing.lg, AppSpacing.sm),
-            child: Text(title,
-                style: TextStyle(
-                  fontSize: AppTextSize.md,
-                  fontWeight: FontWeight.w700,
-                  color: highlight ? AppTheme.primaryLight : ct.textPrimary,
-                )),
-          ),
-          Divider(height: 1, color: ct.cardBorder),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
-            child: Column(children: children),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _ProjectionCard extends StatelessWidget {
   final dynamic resultA, resultB;

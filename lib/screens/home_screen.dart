@@ -535,6 +535,9 @@ class _ComparisonTab extends StatelessWidget {
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
 
+// on branded gradient — intentional
+const _onHeroColor = Colors.white;
+
 class _HeroBanner extends StatelessWidget {
   final bool isSp;
   final bool showOfferC;
@@ -591,7 +594,7 @@ class _HeroBanner extends StatelessWidget {
                 ? 'Compara tu compensación real'
                 : 'Know your true compensation',
             style: const TextStyle(
-              color: Colors.white,
+              color: _onHeroColor,
               fontSize: AppTextSize.titleMd,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
@@ -603,7 +606,7 @@ class _HeroBanner extends StatelessWidget {
                 ? 'Salario neto, impuestos, beneficios y más'
                 : 'After-tax salary, benefits, commute & more',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
+                color: _onHeroColor.withValues(alpha: 0.72),
                 fontSize: AppTextSize.body,
                 height: 1.4),
           ),
@@ -659,13 +662,13 @@ class _HChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.smPlus, vertical: 5),
       decoration: BoxDecoration(
-        color: color ?? Colors.white.withValues(alpha: 0.12),
+        color: color ?? _onHeroColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.xxl),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+        border: Border.all(color: _onHeroColor.withValues(alpha: 0.18)),
       ),
       child: Text(t,
           style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.88),
+              color: _onHeroColor.withValues(alpha: 0.88),
               fontSize: AppTextSize.sm,
               fontWeight: FontWeight.w500)),
     );
@@ -792,7 +795,7 @@ class _VsDivider extends StatelessWidget {
         child: const Center(
           child: Text('VS',
               style: TextStyle(
-                color: Colors.white,
+                color: _onHeroColor,
                 fontSize: AppTextSize.md,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
