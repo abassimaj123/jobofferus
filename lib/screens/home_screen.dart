@@ -244,6 +244,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (_, isSp, __) {
+        final canSave = _canCompare &&
+            (freemiumService.hasFullAccess || freemiumService.isRewarded);
         final screens = [
           _ComparisonTab(
             formKey: _formKey,
@@ -257,6 +259,21 @@ class _HomeScreenState extends State<HomeScreen> {
             onOfferCChanged: (o) => setState(() => _offerC = o),
             onToggleOfferC: () => setState(() => _showOfferC = !_showOfferC),
             appBar: _appBar(isSp),
+            saveButton: canSave
+                ? SaveScenarioButton(
+                    isSpanish: isSp,
+                    onSave: (label) async {
+                      await smartHistoryService.saveScenario(
+                        appKey: _appKey,
+                        screenId: _screenId,
+                        inputHash: _inputHash(),
+                        l1: _l1Snapshot(),
+                        l2: _l2Snapshot(),
+                        label: label,
+                      );
+                    },
+                  )
+                : null,
           ),
           HistoryScreen(onSwitchToCompare: () => setState(() => _tabIndex = 0)),
         ];
@@ -303,28 +320,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _compareFab(bool isSp) {
     final active = _canCompare;
-    final canSave =
-        active && (freemiumService.hasFullAccess || freemiumService.isRewarded);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (canSave) ...[
-          SaveScenarioButton(
-            isSpanish: isSp,
-            onSave: (label) async {
-              await smartHistoryService.saveScenario(
-                appKey: _appKey,
-                screenId: _screenId,
-                inputHash: _inputHash(),
-                l1: _l1Snapshot(),
-                l2: _l2Snapshot(),
-                label: label,
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
         FloatingActionButton.extended(
           onPressed: active ? _debouncedCompare : null,
           backgroundColor: active
@@ -428,6 +427,7 @@ class _ComparisonTab extends StatelessWidget {
   final ValueChanged<JobOffer> onOfferCChanged;
   final VoidCallback onToggleOfferC;
   final PreferredSizeWidget appBar;
+  final Widget? saveButton;
 
   const _ComparisonTab({
     required this.formKey,
@@ -441,6 +441,7 @@ class _ComparisonTab extends StatelessWidget {
     required this.onOfferCChanged,
     required this.onToggleOfferC,
     required this.appBar,
+    this.saveButton,
   });
 
   @override
@@ -518,6 +519,10 @@ class _ComparisonTab extends StatelessWidget {
                               onTap: onToggleOfferC)),
                   ]),
                 ),
+                if (saveButton != null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  saveButton!,
+                ],
               ],
             )), // CalcwisePageEntrance closes
           ), // Form closes

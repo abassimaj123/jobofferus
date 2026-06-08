@@ -1178,10 +1178,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                         size: 18, color: AppTheme.primary),
                     label: Text(isSpanish ? 'Escenario guardado' : 'Scenario saved'),
                   )
-                : (freemiumService.hasFullAccess || freemiumService.isRewarded)
-                    ? SaveScenarioButton(
-                        onSave: _saveScenario, isSpanish: isSpanish)
-                    : const SizedBox.shrink(),
+                : SaveScenarioButton(
+                    onSave: _saveScenario, isSpanish: isSpanish),
           ),
           const SizedBox(height: AppSpacing.md),
 
