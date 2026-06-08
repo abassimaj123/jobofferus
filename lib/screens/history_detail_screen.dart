@@ -1485,8 +1485,9 @@ class _DetailCard extends StatelessWidget {
           child: Column(children: rows.map((r) => Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(r.label,
-                  style: TextStyle(fontSize: AppTextSize.sm, color: ct.textSecondary)),
+              Flexible(child: Text(r.label,
+                  style: TextStyle(fontSize: AppTextSize.sm, color: ct.textSecondary))),
+              const SizedBox(width: 8),
               Text(r.value,
                   style: const TextStyle(fontSize: AppTextSize.sm, fontWeight: FontWeight.w600)),
             ]),
