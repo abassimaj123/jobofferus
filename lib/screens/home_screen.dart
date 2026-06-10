@@ -12,11 +12,14 @@ import '../core/models/comparison_result.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/offer_form_card.dart';
 import '../widgets/paywall_hard.dart';
-import '../main.dart' show paywallSession, isSpanishNotifier, smartHistoryService;
+import '../main.dart'
+    show paywallSession, isSpanishNotifier, smartHistoryService;
 import '../widgets/save_scenario_button.dart';
 import 'comparison_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -45,7 +48,10 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _appKey = 'jobofferus';
   static const _screenId = 'home';
 
-  bool get _canCompare => _offerA.baseSalary > 0 && _offerB.baseSalary > 0 && (!_showOfferC || _offerC.baseSalary > 0);
+  bool get _canCompare =>
+      _offerA.baseSalary > 0 &&
+      _offerB.baseSalary > 0 &&
+      (!_showOfferC || _offerC.baseSalary > 0);
 
   /// Deterministic hash of the current offer inputs (rounded to ±5000).
   String _inputHash() {
@@ -159,11 +165,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _debouncedCompare() {
     HapticFeedback.mediumImpact();
     if (!(_formKey.currentState?.validate() ?? true)) {
+      final s =
+          isSpanishNotifier.value ? const AppStringsEs() : const AppStringsEn();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isSpanishNotifier.value
-              ? 'Por favor corrige los errores'
-              : 'Please fix errors before comparing'),
+          content: Text(s.pleaseFixErrors),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -194,6 +200,9 @@ class _HomeScreenState extends State<HomeScreen> {
       inputHash: _inputHash(),
       l1: _l1Snapshot(),
       l2: _l2Snapshot(),
+      onSaved: () {
+        if (mounted) setState(() {});
+      },
     );
     if (!mounted) return;
     Navigator.of(context).push(PageRouteBuilder(
@@ -278,13 +287,13 @@ class _HomeScreenState extends State<HomeScreen> {
           HistoryScreen(onSwitchToCompare: () => setState(() => _tabIndex = 0)),
         ];
 
+        final s = isSp ? const AppStringsEs() : const AppStringsEn();
         return Scaffold(
           body: GestureDetector(
             onTap: () => FocusScope.of(context).unfocus(),
             child: IndexedStack(index: _tabIndex, children: screens),
           ),
-          floatingActionButton:
-              _tabIndex == 0 ? _compareFab(isSp) : null,
+          floatingActionButton: _tabIndex == 0 ? _compareFab(isSp, s) : null,
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
           bottomNavigationBar: Column(
@@ -302,12 +311,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   NavigationDestination(
                     icon: const Icon(Icons.swap_horiz_rounded),
                     selectedIcon: const Icon(Icons.compare_arrows_rounded),
-                    label: isSp ? 'Comparar' : 'Compare',
+                    label: s.compare,
                   ),
                   NavigationDestination(
                     icon: const Icon(Icons.bookmark_border_rounded),
                     selectedIcon: const Icon(Icons.bookmark_rounded),
-                    label: isSp ? 'Historial' : 'History',
+                    label: s.history,
                   ),
                 ],
               ),
@@ -318,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _compareFab(bool isSp) {
+  Widget _compareFab(bool isSp, AppStrings s) {
     final active = _canCompare;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -335,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   active ? Colors.white : Colors.white.withValues(alpha: 0.5),
               size: 22),
           label: Text(
-            isSp ? 'Comparar ofertas' : 'Compare Offers',
+            s.compareOffers,
             style: TextStyle(
               color:
                   active ? Colors.white : Colors.white.withValues(alpha: 0.5),
@@ -530,7 +539,6 @@ class _ComparisonTab extends StatelessWidget {
       ), // ConstrainedBox + Center closes
     );
   }
-
 }
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
@@ -545,6 +553,7 @@ class _HeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = isSp ? const AppStringsEs() : const AppStringsEn();
     return Container(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.md),
@@ -590,9 +599,7 @@ class _HeroBanner extends StatelessWidget {
           ]),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            isSp
-                ? 'Compara tu compensación real'
-                : 'Know your true compensation',
+            s.heroTitle,
             style: const TextStyle(
               color: _onHeroColor,
               fontSize: AppTextSize.titleMd,
@@ -602,9 +609,7 @@ class _HeroBanner extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            isSp
-                ? 'Salario neto, impuestos, beneficios y más'
-                : 'After-tax salary, benefits, commute & more',
+            s.heroSubtitle,
             style: TextStyle(
                 color: _onHeroColor.withValues(alpha: 0.72),
                 fontSize: AppTextSize.body,
@@ -612,11 +617,11 @@ class _HeroBanner extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(children: [
-            _HChip(isSp ? '51 estados' : '51 States'),
+            _HChip(s.heroChip51States),
             const SizedBox(width: AppSpacing.sm),
             _HChip('FICA · IRS 2025'),
             const SizedBox(width: AppSpacing.sm),
-            _HChip(isSp ? '3 Ofertas' : '3 Offers',
+            _HChip(s.heroChip3Offers,
                 color: AppTheme.offerC.withValues(alpha: 0.22)),
           ]),
         ],
@@ -704,7 +709,7 @@ class _AddOfferCChip extends StatelessWidget {
           Icon(Icons.add_circle_outline, color: AppTheme.offerC, size: 18),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            isSp ? 'Agregar 3ª oferta' : 'Add 3rd offer',
+            (isSp ? const AppStringsEs() : const AppStringsEn()).add3rdOffer,
             style: const TextStyle(
               color: AppTheme.offerC,
               fontSize: AppTextSize.md,
@@ -744,7 +749,7 @@ class _RemoveOfferCChip extends StatelessWidget {
           Icon(Icons.remove_circle_outline, color: ct.textSecondary, size: 18),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            isSp ? 'Quitar 3ª oferta' : 'Remove 3rd offer',
+            (isSp ? const AppStringsEs() : const AppStringsEn()).remove3rdOffer,
             style: TextStyle(
               color: ct.textSecondary,
               fontSize: AppTextSize.md,

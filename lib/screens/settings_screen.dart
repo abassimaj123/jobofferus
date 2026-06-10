@@ -7,6 +7,8 @@ import '../core/freemium/freemium_service.dart';
 import '../core/freemium/iap_service.dart';
 import '../core/services/analytics_service.dart';
 import '../core/theme/app_theme.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -40,9 +42,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (context, isSp, _) {
+        final s = isSp ? const AppStringsEs() : const AppStringsEn();
         return Scaffold(
           appBar: AppBar(
-            title: Text(isSp ? 'Ajustes' : 'Settings'),
+            title: Text(s.settings),
           ),
           bottomNavigationBar: const CalcwiseAdFooter(),
           body: SafeArea(
@@ -61,14 +64,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           leading: const Icon(Icons.verified_rounded,
                               color: CalcwiseSemanticColors.warnIcon),
                           title: Text(
-                            isSp ? '¡Eres Premium!' : 'You\'re Premium!',
+                            s.youArePremium,
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         )
                       : Column(mainAxisSize: MainAxisSize.min, children: [
                           _Tile(
                             icon: Icons.workspace_premium_rounded,
-                            label: isSp ? 'Obtener Premium' : 'Get Premium',
+                            label: s.getPremium,
                             onTap: () => showModalBottomSheet(
                               context: ctx,
                               isScrollControlled: true,
@@ -86,8 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const Divider(height: 1),
                           _Tile(
                             icon: Icons.restore_rounded,
-                            label:
-                                isSp ? 'Restaurar compra' : 'Restore Purchase',
+                            label: s.restorePurchase,
                             onTap: () => IAPService.instance.restore(),
                           ),
                         ]),
@@ -95,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               // ── Language ──────────────────────────────────────
-              _SectionHeader(isSp ? 'Idioma' : 'Language'),
+              _SectionHeader(s.language),
               _Card(
                 child: Row(children: [
                   Expanded(
@@ -117,7 +119,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               // ── Appearance ────────────────────────────────────
-              _SectionHeader(isSp ? 'Apariencia' : 'Appearance'),
+              _SectionHeader(s.appearance),
               _Card(
                 child: ValueListenableBuilder<ThemeMode>(
                   valueListenable: themeModeService.notifier,
@@ -140,28 +142,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               // ── Links ─────────────────────────────────────────
-              _SectionHeader(isSp ? 'Más' : 'More'),
+              _SectionHeader(s.more),
               _Card(
                 child: Column(children: [
                   _Tile(
                     icon: Icons.privacy_tip_rounded,
-                    label: isSp ? 'Política de privacidad' : 'Privacy Policy',
+                    label: s.privacyPolicy,
                     onTap: () => _launch('https://calqwise.com/privacy'),
                   ),
                   const Divider(height: 1),
-                  CalcwiseRateAppTile(
-                      label: isSp ? 'Calificar la app' : 'Rate the App'),
+                  CalcwiseRateAppTile(label: s.rateTheApp),
                   const Divider(height: 1),
                   _Tile(
                     icon: Icons.email_rounded,
-                    label: isSp ? 'Contactar soporte' : 'Contact Support',
+                    label: s.contactSupport,
                     onTap: () => _launch('mailto:support@calqwise.com'),
                   ),
                   const Divider(height: 1),
                   _Tile(
                     icon: Icons.apps_rounded,
-                    label:
-                        isSp ? 'Más apps de CalqWise' : 'More apps by CalqWise',
+                    label: s.moreAppsByCalqWise,
                     onTap: () => _launch(
                         'https://play.google.com/store/apps/developer?id=CalqWise'),
                   ),
@@ -175,9 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   vertical: AppSpacing.lg,
                 ),
                 child: Text(
-                  isSp
-                      ? 'Esta aplicación es solo para fines informativos. Consulte a un profesional financiero antes de tomar decisiones laborales o de compensación.'
-                      : 'This app is for informational purposes only. Consult a financial professional before making any career or compensation decisions.',
+                  s.settingsDisclaimer,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: AppTextSize.xs,

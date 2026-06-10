@@ -7,6 +7,8 @@ import '../core/data/salary_benchmark_data.dart';
 import '../core/models/job_offer.dart';
 import '../core/services/deadline_notification_service.dart';
 import '../core/theme/app_theme.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 import 'offer_parser_dialog.dart';
 
 class OfferFormCard extends StatefulWidget {
@@ -118,12 +120,9 @@ class _OfferFormCardState extends State<OfferFormCard>
   }
 
   String get _offerLabel {
-    if (widget.isOfferC) {
-      return widget.isSpanish ? 'Oferta C' : 'Offer C';
-    }
-    return widget.isOfferA
-        ? (widget.isSpanish ? 'Oferta A' : 'Offer A')
-        : (widget.isSpanish ? 'Oferta B' : 'Offer B');
+    final s = widget.isSpanish ? const AppStringsEs() : const AppStringsEn();
+    if (widget.isOfferC) return s.offerC;
+    return widget.isOfferA ? s.offerA : s.offerB;
   }
 
   String get _letterBadge {
@@ -158,6 +157,7 @@ class _OfferFormCardState extends State<OfferFormCard>
   @override
   Widget build(BuildContext context) {
     final ct = CalcwiseTheme.of(context);
+    final s = widget.isSpanish ? const AppStringsEs() : const AppStringsEn();
     final shadow = widget.isOfferC
         ? AppTheme.offerCCardShadow
         : (widget.isOfferA
@@ -226,7 +226,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                               fontSize: AppTextSize.sm)),
                     if (widget.value.baseSalary > 0)
                       Text(
-                        '\$${widget.value.baseSalary.toStringAsFixed(0)}${widget.isSpanish ? '/año' : '/yr'}',
+                        '\$${widget.value.baseSalary.toStringAsFixed(0)}${s.perYear}',
                         style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.9),
                             fontSize: AppTextSize.md,
@@ -265,14 +265,14 @@ class _OfferFormCardState extends State<OfferFormCard>
                     Expanded(
                         child: _tf(
                             ctrl: _label,
-                            label: widget.isSpanish ? 'Nombre' : 'Offer name',
+                            label: s.offerName,
                             hint: _offerLabel,
                             icon: Icons.label_outline_rounded)),
                     const SizedBox(width: AppSpacing.smPlus),
                     Expanded(
                         child: _tf(
                             ctrl: _company,
-                            label: widget.isSpanish ? 'Empresa' : 'Company',
+                            label: s.company,
                             hint: 'Google, Meta…',
                             icon: Icons.business_rounded)),
                   ]),
@@ -332,7 +332,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                     const SizedBox(height: AppSpacing.sm),
                     _tf(
                       ctrl: _hoursPerWeek,
-                      label: widget.isSpanish ? 'hrs/sem' : 'hrs/week',
+                      label: s.hrsWeek,
                       hint: '40',
                       num: true,
                       icon: Icons.schedule_rounded,
@@ -353,7 +353,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                     Expanded(
                         child: _tf(
                             ctrl: _bonus,
-                            label: widget.isSpanish ? 'Bono (%)' : 'Bonus (%)',
+                            label: s.bonusPct,
                             hint: '10',
                             suffix: '%',
                             num: true,
@@ -363,7 +363,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                     Expanded(
                         child: _tf(
                             ctrl: _pto,
-                            label: widget.isSpanish ? 'Días PTO' : 'PTO days',
+                            label: s.ptoDays,
                             hint: '15',
                             num: true,
                             icon: Icons.beach_access_rounded,
@@ -373,9 +373,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                   // Signing bonus
                   _tf(
                     ctrl: _signing,
-                    label: widget.isSpanish
-                        ? 'Bono de contratación (\$)'
-                        : 'Signing Bonus (\$)',
+                    label: s.signingBonus,
                     hint: '10000',
                     prefix: '\$',
                     num: true,
@@ -406,8 +404,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                       Expanded(
                           child: _tf(
                               ctrl: _upTo,
-                              label:
-                                  widget.isSpanish ? 'Hasta (%)' : 'Up to (%)',
+                              label: s.upTo,
                               hint: '4',
                               suffix: '%',
                               num: true,
@@ -418,9 +415,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                       Expanded(
                           child: _tf(
                               ctrl: _health,
-                              label: widget.isSpanish
-                                  ? 'Salud (\$/año)'
-                                  : 'Health (\$/yr)',
+                              label: s.healthPerYr,
                               hint: '3000',
                               prefix: '\$',
                               num: true,
@@ -431,9 +426,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                       Expanded(
                           child: _tf(
                               ctrl: _dental,
-                              label: widget.isSpanish
-                                  ? 'Dental (\$/año)'
-                                  : 'Dental (\$/yr)',
+                              label: s.dentalPerYr,
                               hint: '500',
                               prefix: '\$',
                               num: true,
@@ -443,9 +436,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                     const SizedBox(height: AppSpacing.md),
                     _tf(
                         ctrl: _rsu,
-                        label: widget.isSpanish
-                            ? 'RSU/Stock anual (\$)'
-                            : 'Annual RSU/Stock (\$)',
+                        label: s.annualRsuStock,
                         hint: '20000',
                         prefix: '\$',
                         num: true,
@@ -458,9 +449,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                       const SizedBox(height: AppSpacing.md),
                       _tf(
                           ctrl: _commute,
-                          label: widget.isSpanish
-                              ? 'Millas ida al trabajo'
-                              : 'Miles one-way commute',
+                          label: s.milesOneWayCommute,
                           hint: '15',
                           suffix: ' mi',
                           num: true,
@@ -472,9 +461,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                     const SizedBox(height: AppSpacing.md),
                     _tf(
                         ctrl: _raise,
-                        label: widget.isSpanish
-                            ? 'Aumento anual (%)'
-                            : 'Annual raise (%)',
+                        label: s.annualRaisePct,
                         hint: '3',
                         suffix: '%',
                         num: true,
@@ -514,9 +501,7 @@ class _OfferFormCardState extends State<OfferFormCard>
             const SizedBox(width: AppSpacing.smPlus),
             Expanded(
               child: Text(
-                widget.isSpanish
-                    ? 'Pegar carta de oferta'
-                    : 'Paste offer letter',
+                widget.isSpanish ? const AppStringsEs().pasteOfferLetter : const AppStringsEn().pasteOfferLetter,
                 style: TextStyle(
                     color: _c1,
                     fontSize: AppTextSize.md,
@@ -530,7 +515,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Text(
-                widget.isSpanish ? 'NUEVO' : 'NEW',
+                widget.isSpanish ? const AppStringsEs().newBadge : const AppStringsEn().newBadge,
                 style: TextStyle(
                   color: _c1,
                   fontSize: AppTextSize.xxs,
@@ -579,11 +564,11 @@ class _OfferFormCardState extends State<OfferFormCard>
   // ── Validator for numeric fields ──────────────────────────────────────────
 
   String? _numValidator(String? v, {bool allowEmpty = true}) {
-    if (v == null || v.trim().isEmpty) return allowEmpty ? null : (widget.isSpanish ? 'Requerido' : 'Required');
+    final s = widget.isSpanish ? const AppStringsEs() : const AppStringsEn();
+    if (v == null || v.trim().isEmpty) return allowEmpty ? null : s.required;
     final n = double.tryParse(v.replaceAll(',', ''));
-    if (n == null)
-      return widget.isSpanish ? 'Número inválido' : 'Invalid number';
-    if (n < 0) return widget.isSpanish ? 'Debe ser ≥ 0' : 'Must be ≥ 0';
+    if (n == null) return s.invalidNumber;
+    if (n < 0) return s.mustBeGte0;
     return null;
   }
 
@@ -606,12 +591,8 @@ class _OfferFormCardState extends State<OfferFormCard>
         ),
         decoration: InputDecoration(
           labelText: widget.value.isHourly
-              ? (widget.isSpanish
-                  ? 'Salario por hora (\$)'
-                  : 'Hourly rate (\$)')
-              : (widget.isSpanish
-                  ? 'Salario anual (\$)'
-                  : 'Annual salary (\$)'),
+              ? (widget.isSpanish ? const AppStringsEs().hourlySalaryLabel : const AppStringsEn().hourlySalaryLabel)
+              : (widget.isSpanish ? const AppStringsEs().annualSalaryLabel : const AppStringsEn().annualSalaryLabel),
           hintText: widget.value.isHourly ? '25.00' : '85,000',
           prefixText: '\$  ',
           suffixText: widget.value.isHourly ? '/hr' : '/yr',
@@ -683,7 +664,7 @@ class _OfferFormCardState extends State<OfferFormCard>
   Widget _stateDropdown() => DropdownButtonFormField<String>(
         initialValue: widget.value.stateCode,
         decoration: InputDecoration(
-          labelText: widget.isSpanish ? 'Estado' : 'State',
+          labelText: widget.isSpanish ? const AppStringsEs().state : const AppStringsEn().state,
           floatingLabelStyle:
               TextStyle(color: _c1, fontWeight: FontWeight.w600),
           prefixIcon: const Icon(Icons.location_on_rounded, size: 17),
@@ -711,9 +692,7 @@ class _OfferFormCardState extends State<OfferFormCard>
       initialValue: cur,
       isExpanded: true,
       decoration: InputDecoration(
-        labelText: widget.isSpanish
-            ? 'Ciudad (costo de vida)'
-            : 'City (cost of living)',
+        labelText: widget.isSpanish ? const AppStringsEs().cityColLabel : const AppStringsEn().cityColLabel,
         floatingLabelStyle: TextStyle(color: _c1, fontWeight: FontWeight.w600),
         prefixIcon: const Icon(Icons.location_city_rounded, size: 17),
         suffixIcon:
@@ -758,7 +737,7 @@ class _OfferFormCardState extends State<OfferFormCard>
         const SizedBox(width: AppSpacing.smPlus),
         Expanded(
             child: Text(
-          widget.isSpanish ? 'Trabajo remoto' : 'Remote work',
+          widget.isSpanish ? const AppStringsEs().remoteWork : const AppStringsEn().remoteWork,
           style: TextStyle(
             fontSize: AppTextSize.body,
             color: active ? ct.successGreen : ct.textSecondary,
@@ -794,14 +773,14 @@ class _HourlyToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(children: [
       _Chip(
-        label: isSpanish ? 'Por año' : 'Annual',
+        label: isSpanish ? const AppStringsEs().annual : const AppStringsEn().annual,
         selected: !isHourly,
         color: color,
         onTap: () => onToggle(false),
       ),
       const SizedBox(width: AppSpacing.sm),
       _Chip(
-        label: isSpanish ? 'Por hora' : 'Hourly',
+        label: isSpanish ? const AppStringsEs().hourly : const AppStringsEn().hourly,
         selected: isHourly,
         color: color,
         onTap: () => onToggle(true),
@@ -875,7 +854,7 @@ class _DeadlineRow extends StatelessWidget {
       Icon(Icons.event_rounded, size: 16, color: ct.textSecondary),
       const SizedBox(width: AppSpacing.smPlus),
       Text(
-        isSpanish ? 'Fecha límite:' : 'Offer deadline:',
+        isSpanish ? const AppStringsEs().offerDeadline : const AppStringsEn().offerDeadline,
         style: TextStyle(fontSize: AppTextSize.sm, color: ct.textSecondary),
       ),
       const SizedBox(width: AppSpacing.sm),
@@ -940,7 +919,7 @@ class _DeadlineChip extends StatelessWidget {
           border: Border.all(color: ct.cardBorder),
         ),
         child: Text(
-          isSpanish ? 'Sin fecha límite' : 'No deadline',
+          isSpanish ? const AppStringsEs().noDeadline : const AppStringsEn().noDeadline,
           style: TextStyle(fontSize: AppTextSize.sm, color: ct.textSecondary),
         ),
       );
@@ -957,15 +936,15 @@ class _DeadlineChip extends StatelessWidget {
 
     if (expired) {
       chipColor = AppTheme.errorRed;
-      label = isSpanish ? 'Vencida' : 'Expired';
+      label = isSpanish ? const AppStringsEs().deadlineExpired : const AppStringsEn().deadlineExpired;
     } else if (urgent) {
       chipColor = AppTheme.warningOrange;
-      final dayStr = isSpanish ? 'días restantes' : 'days left';
+      final dayStr = isSpanish ? const AppStringsEs().daysLeft : const AppStringsEn().daysLeft;
       label = _fmtDate(deadline!);
       suffix = '$daysLeft $dayStr ⚠️';
     } else {
       chipColor = AppTheme.successGreen;
-      final dayStr = isSpanish ? 'días restantes' : 'days left';
+      final dayStr = isSpanish ? const AppStringsEs().daysLeft : const AppStringsEn().daysLeft;
       label = _fmtDate(deadline!);
       suffix = '$daysLeft $dayStr';
     }
@@ -1033,21 +1012,17 @@ class _BenchmarkChip extends StatelessWidget {
     Color chipColor;
     String label;
 
+    final sB = isSpanish ? const AppStringsEs() : const AppStringsEn();
+    final medianK = (median / 1000).round();
     if (pctDiff > 10) {
       chipColor = AppTheme.successGreen;
-      final aboveStr = isSpanish ? 'sobre el mercado' : 'above market';
-      label =
-          '📊 $stateCode ${isSpanish ? 'mediana' : 'median'}: \$${(median / 1000).round()}k — $absDiff% $aboveStr';
+      label = sB.benchmarkChipAbove(stateCode, medianK, absDiff);
     } else if (pctDiff < -10) {
       chipColor = AppTheme.warningOrange;
-      final belowStr = isSpanish ? 'bajo el mercado' : 'below market';
-      label =
-          '📊 $stateCode ${isSpanish ? 'mediana' : 'median'}: \$${(median / 1000).round()}k — $absDiff% $belowStr';
+      label = sB.benchmarkChipBelow(stateCode, medianK, absDiff);
     } else {
       chipColor = AppTheme.textSecondary;
-      final atStr = isSpanish ? 'en el mercado' : 'at market';
-      label =
-          '📊 $stateCode ${isSpanish ? 'mediana' : 'median'}: \$${(median / 1000).round()}k — $atStr';
+      label = sB.benchmarkChipAt(stateCode, medianK);
     }
 
     return Padding(
@@ -1108,11 +1083,9 @@ class _BenefitsToggle extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              isSp
-                  ? (expanded
-                      ? 'Ocultar beneficios'
-                      : '+ Beneficios y transporte')
-                  : (expanded ? 'Hide benefits' : '+ Benefits & commute'),
+              expanded
+                  ? (isSp ? const AppStringsEs().hidebenefits : const AppStringsEn().hidebenefits)
+                  : (isSp ? const AppStringsEs().benefitsAndCommute : const AppStringsEn().benefitsAndCommute),
               style: TextStyle(
                   color: color,
                   fontSize: AppTextSize.md,
@@ -1129,7 +1102,7 @@ class _BenefitsToggle extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.mdPlus),
               ),
               child: Text(
-                isSp ? '401k · RSU · Salud' : '401k · RSU · Health',
+                isSp ? const AppStringsEs().benefits401kRsuHealth : const AppStringsEn().benefits401kRsuHealth,
                 style: TextStyle(
                     fontSize: AppTextSize.xs, color: color, fontWeight: FontWeight.w600),
               ),

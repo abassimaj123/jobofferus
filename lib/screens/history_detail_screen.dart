@@ -11,6 +11,8 @@ import '../core/theme/app_theme.dart';
 import '../core/language/language_notifier.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/services/analytics_service.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 
 /// Full detail view for a saved comparison or single offer entry.
 class HistoryDetailScreen extends StatefulWidget {
@@ -63,7 +65,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(isEs ? 'Error al exportar PDF' : 'PDF export failed'),
+        content: Text((isEs ? const AppStringsEs() : const AppStringsEn()).failedExportPdfLabel),
         behavior: SnackBarBehavior.floating,
       ));
     } finally {
@@ -658,12 +660,11 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (_, isEs, __) {
+        final s = isEs ? const AppStringsEs() : const AppStringsEn();
         final comp = _compJson;
         return Scaffold(
           appBar: AppBar(
-            title: Text(_isComparison
-                ? (isEs ? 'Comparación guardada' : 'Saved Comparison')
-                : (isEs ? 'Detalle de Oferta' : 'Offer Detail')),
+            title: Text(_isComparison ? s.savedComparison : s.offerDetail),
             leading: const BackButton(),
           ),
           body: comp != null
@@ -736,6 +737,7 @@ class _ComparisonBody extends StatelessWidget {
       return _HistoryDetailScreenState._winnerLetterToIndex(v ?? '');
     }
 
+    final s = isEs ? const AppStringsEs() : const AppStringsEn();
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 24),
@@ -758,8 +760,8 @@ class _ComparisonBody extends StatelessWidget {
                   Expanded(
                     child: Text(
                       isTie
-                          ? (isEs ? 'Empate' : 'Tie')
-                          : '${offers[winnerIdx.clamp(0, offers.length - 1)]['label'] ?? 'Offer $winner'} ${isEs ? 'gana' : 'wins'}',
+                          ? s.tie
+                          : '${offers[winnerIdx.clamp(0, offers.length - 1)]['label'] ?? 'Offer $winner'} ${s.winnerLabel}',
                       style: const TextStyle(
                           color: Colors.white,
                           fontSize: AppTextSize.subtitleSm,
@@ -770,7 +772,7 @@ class _ComparisonBody extends StatelessWidget {
                 if (!isTie) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '+${AmountFormatter.ui(advantage, 'USD')} ${isEs ? "ventaja/año" : "advantage/yr"}',
+                    '+${AmountFormatter.ui(advantage, 'USD')} ${s.advantagePerYear}',
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: AppTextSize.md),
@@ -778,7 +780,7 @@ class _ComparisonBody extends StatelessWidget {
                 ],
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '${isEs ? "Guardado" : "Saved"}: ${dateFmt.format(createdAt)}',
+                  '${s.savedLabel}: ${dateFmt.format(createdAt)}',
                   style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: AppTextSize.xs),
@@ -807,20 +809,20 @@ class _ComparisonBody extends StatelessWidget {
 
           // ── Income breakdown ───────────────────────────────────────────────
           _SectionCard(
-            title: isEs ? 'Ingresos' : 'Income',
+            title: s.income,
             icon: Icons.attach_money_rounded,
             ct: ct,
             children: [
-              _CompRow(isEs ? 'Salario bruto' : 'Gross Salary',
+              _CompRow(s.grossSalaryLabel,
                   [for (var o in offers) amt(o['base'])],
                   bold: true, ct: ct),
-              _CompRow(isEs ? 'Neto anual' : 'Annual Net Take-Home',
+              _CompRow(s.annualNet,
                   [for (var o in offers) amt(o['net'])],
                   bold: true, winnerIdx: winnerIdx, ct: ct),
-              _CompRow(isEs ? 'Neto mensual' : 'Monthly Net',
+              _CompRow(s.monthlyNet2,
                   [for (var o in offers) amt(o['monthly'])],
                   ct: ct),
-              _CompRow(isEs ? 'Comp. total neta' : 'Total Net Comp.',
+              _CompRow(s.totalNetComp,
                   [for (var o in offers) amt(o['total_comp'])],
                   bold: true,
                   winnerIdx: catWinner('total'),
@@ -831,23 +833,23 @@ class _ComparisonBody extends StatelessWidget {
 
           // ── Tax breakdown ──────────────────────────────────────────────────
           _SectionCard(
-            title: isEs ? 'Impuestos' : 'Taxes',
+            title: s.taxes,
             icon: Icons.account_balance_rounded,
             ct: ct,
             children: [
-              _CompRow(isEs ? 'Tasa efectiva' : 'Effective Rate',
+              _CompRow(s.effectiveRate2,
                   [for (var o in offers) pct(o['tax_rate'])],
                   ct: ct),
-              _CompRow(isEs ? 'Federal' : 'Federal Tax',
+              _CompRow(s.federal,
                   [for (var o in offers) amt(o['federal'])],
                   ct: ct),
-              _CompRow(isEs ? 'Estatal' : 'State Tax',
+              _CompRow(s.stateLabel2,
                   [for (var o in offers) amt(o['state_tax'])],
                   ct: ct),
               _CompRow('FICA',
                   [for (var o in offers) amt(o['fica'])],
                   ct: ct),
-              _CompRow(isEs ? 'Total impuestos' : 'Total Taxes',
+              _CompRow(s.totalTaxes,
                   [for (var o in offers) amt(o['total_tax'])],
                   bold: true, ct: ct),
             ],
@@ -856,22 +858,19 @@ class _ComparisonBody extends StatelessWidget {
 
           // ── Bonuses ───────────────────────────────────────────────────────
           _SectionCard(
-            title: isEs ? 'Bonos' : 'Bonuses',
+            title: s.bonuses,
             icon: Icons.stars_rounded,
             ct: ct,
             children: [
-              _CompRow(isEs ? 'Bono anual (bruto)' : 'Annual Bonus (gross)',
+              _CompRow(s.annualBonusGross,
                   [for (var o in offers) amt(o['annual_bonus'])],
                   winnerIdx: catWinner('bonus'), ct: ct),
-              _CompRow(isEs ? 'Bono anual (neto)' : 'Annual Bonus (after tax)',
+              _CompRow(s.annualBonusAfterTax2,
                   [for (var o in offers) amt(o['bonus_net'])],
                   ct: ct),
               if (offers.any(
                   (o) => ((o['signing'] as num?) ?? 0) > 0))
-                _CompRow(
-                    isEs
-                        ? 'Bono contratación (neto)'
-                        : 'Signing Bonus (after tax)',
+                _CompRow(s.signingBonusAfterTax2,
                     [for (var o in offers) amt(o['signing_net'])],
                     ct: ct),
             ],
@@ -880,26 +879,25 @@ class _ComparisonBody extends StatelessWidget {
 
           // ── Benefits ──────────────────────────────────────────────────────
           _SectionCard(
-            title: isEs ? 'Beneficios' : 'Benefits',
+            title: s.benefitsLabel,
             icon: Icons.health_and_safety_rounded,
             ct: ct,
             children: [
-              _CompRow(isEs ? 'Match 401k' : '401k Employer Match',
+              _CompRow(s.match401kLabel,
                   [for (var o in offers) amt(o['k401k_match_usd'])],
                   ct: ct),
-              _CompRow(isEs ? 'Salud / Dental' : 'Health & Dental',
+              _CompRow(s.healthDental,
                   [for (var o in offers) amt(o['health'])],
                   winnerIdx: catWinner('benefits'), ct: ct),
               _CompRow('RSU / Equity',
                   [for (var o in offers) amt(o['rsu_value'])],
                   winnerIdx: catWinner('rsu'), ct: ct),
-              _CompRow('PTO (${isEs ? "valor" : "value"})',
+              _CompRow('PTO (${s.ptoValueLabel2})',
                   [for (var o in offers) amt(o['pto_value'])],
                   winnerIdx: catWinner('pto'), ct: ct),
               if (offers.any(
                   (o) => ((o['commute_miles'] as num?) ?? 0) > 0))
-                _CompRow(
-                    isEs ? 'Costo traslado' : 'Commute Cost',
+                _CompRow(s.commuteLabel,
                     [for (var o in offers) amt(o['commute_cost'])],
                     ct: ct),
             ],
@@ -908,14 +906,11 @@ class _ComparisonBody extends StatelessWidget {
 
           // ── Cost of living ─────────────────────────────────────────────────
           _SectionCard(
-            title: isEs ? 'Poder adquisitivo' : 'Purchasing Power',
+            title: s.purchasingPower,
             icon: Icons.location_city_rounded,
             ct: ct,
             children: [
-              _CompRow(
-                  isEs
-                      ? 'Neto ajustado (costo de vida)'
-                      : 'CoL-Adjusted Take-Home',
+              _CompRow(s.colAdjustedTakeHome2,
                   [for (var o in offers) amt(o['col_adj'])],
                   bold: true,
                   winnerIdx: catWinner('col'),
@@ -929,13 +924,12 @@ class _ComparisonBody extends StatelessWidget {
               offers.isNotEmpty &&
               (offers[0]['5yr'] as List?)?.isNotEmpty == true) ...[
             _SectionCard(
-              title: isEs ? 'Proyección 5 años' : '5-Year Projection',
+              title: s.projection5Yr,
               icon: Icons.trending_up_rounded,
               ct: ct,
               children: [
                 for (var yr = 0; yr < 5; yr++)
-                  _CompRow(
-                      '${isEs ? "Año" : "Year"} ${yr + 1}',
+                  _CompRow(s.yearN(yr + 1),
                       [
                         for (var o in offers)
                           amt((o['5yr'] as List?)?.elementAtOrNull(yr) ?? 0)
@@ -1003,14 +997,10 @@ class _ComparisonBody extends StatelessWidget {
                             size: 20),
                     label: Text(
                       exporting
-                          ? (isEs ? 'Generando...' : 'Generating...')
+                          ? s.generating
                           : isPrem
-                              ? (isEs
-                                  ? 'Exportar reporte completo PDF'
-                                  : 'Export Full PDF Report')
-                              : (isEs
-                                  ? 'PDF detallado — Premium'
-                                  : 'Detailed PDF — Premium'),
+                              ? s.exportFullPdfReport
+                              : s.detailedPdfPremium,
                       style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: AppTextSize.md),
@@ -1020,9 +1010,7 @@ class _ComparisonBody extends StatelessWidget {
                 if (!isPrem) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    isEs
-                        ? '5 páginas · Impuestos · Beneficios · Proyección 5 años'
-                        : '5 pages · Taxes · Benefits · 5-Year Projection',
+                    s.pages5TaxesBenefitsProjection,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: AppTextSize.xs,
@@ -1093,7 +1081,7 @@ class _OfferSummaryCard extends StatelessWidget {
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.xxl),
             ),
-            child: Text('🏆 ${isEs ? "Ganador" : "Winner"}',
+            child: Text('🏆 ${(isEs ? const AppStringsEs() : const AppStringsEn()).ganadorLabel}',
                 style: TextStyle(
                     color: color,
                     fontSize: AppTextSize.xs,
@@ -1124,7 +1112,7 @@ class _OfferSummaryCard extends StatelessWidget {
                   letterSpacing: -0.5)),
         ),
         Text(
-            '${isEs ? "neto/año" : "net/yr"} · ${pctFmt.format(taxRate)}% ${isEs ? "imp." : "tax"}',
+            '${(isEs ? const AppStringsEs() : const AppStringsEn()).netsPerYear} · ${pctFmt.format(taxRate)}% ${(isEs ? const AppStringsEs() : const AppStringsEn()).taxLabel}',
             style: TextStyle(
                 fontSize: AppTextSize.xs, color: ct.textSecondary)),
       ]),
@@ -1263,7 +1251,7 @@ class _CategoryWinnersCard extends StatelessWidget {
             const Icon(Icons.emoji_events_rounded,
                 size: 16, color: AppTheme.primary),
             const SizedBox(width: AppSpacing.xs),
-            Text(isEs ? 'Ganadores por categoría' : 'Category Winners',
+            Text((isEs ? const AppStringsEs() : const AppStringsEn()).categoryWinners,
                 style: const TextStyle(
                     fontSize: AppTextSize.md, fontWeight: FontWeight.w700)),
           ]),
@@ -1281,7 +1269,7 @@ class _CategoryWinnersCard extends StatelessWidget {
               final color =
                   isTie ? ct.textSecondary : colors[idx.clamp(0, 2)];
               final winLabel = isTie
-                  ? (isEs ? 'Empate' : 'Tie')
+                  ? (isEs ? const AppStringsEs() : const AppStringsEn()).tie
                   : (offers.elementAtOrNull(idx)?['label'] as String? ??
                       'Offer ${e.value}');
               return Container(
@@ -1346,40 +1334,39 @@ class _LegacyBody extends StatelessWidget {
         DateTime.tryParse(row['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();
 
+    final s = isEs ? const AppStringsEs() : const AppStringsEn();
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xxxl),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         CalcwiseHeroCard(
-          label: isEs ? 'Neto anual' : 'Annual net take-home',
+          label: s.annualNet,
           value: AmountFormatter.ui(netSalary, 'USD'),
-          secondary: isEs
-              ? '${AmountFormatter.ui(monthlyNet, 'USD')}/mes · Imp. ${pctFmt.format(taxRate)}%'
-              : '${AmountFormatter.ui(monthlyNet, 'USD')}/mo · Tax ${pctFmt.format(taxRate)}%',
+          secondary: '${AmountFormatter.ui(monthlyNet, 'USD')}${s.netPerMonth2} · ${s.taxLabel} ${pctFmt.format(taxRate)}%',
           backgroundColor: AppTheme.primary,
           stats: [
-            (label: isEs ? 'Empresa' : 'Company', value: company.isNotEmpty ? company : '—'),
-            (label: isEs ? 'Ciudad' : 'City', value: location.isNotEmpty ? location : '—'),
+            (label: s.company, value: company.isNotEmpty ? company : '—'),
+            (label: s.cityLabel, value: location.isNotEmpty ? location : '—'),
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-        _DetailCard(title: isEs ? 'Compensación' : 'Compensation', rows: [
-          _RowData(isEs ? 'Salario bruto' : 'Gross Salary', AmountFormatter.ui(salary, 'USD')),
-          _RowData(isEs ? 'Ingreso neto anual' : 'Net Annual', AmountFormatter.ui(netSalary, 'USD')),
-          _RowData(isEs ? 'Ingreso neto mensual' : 'Net Monthly', AmountFormatter.ui(monthlyNet, 'USD')),
-          _RowData(isEs ? 'Tasa efectiva' : 'Effective Tax Rate', '${pctFmt.format(taxRate)}%'),
+        _DetailCard(title: s.compensation, rows: [
+          _RowData(s.grossSalaryLabel, AmountFormatter.ui(salary, 'USD')),
+          _RowData(s.netAnnualLabel, AmountFormatter.ui(netSalary, 'USD')),
+          _RowData(s.netMonthlyLabel, AmountFormatter.ui(monthlyNet, 'USD')),
+          _RowData(s.effectiveTaxRateLabel2, '${pctFmt.format(taxRate)}%'),
         ]),
         const SizedBox(height: AppSpacing.md),
-        _DetailCard(title: isEs ? 'Beneficios y Extras' : 'Benefits & Extras', rows: [
-          if (bonus > 0) _RowData(isEs ? 'Bono anual' : 'Annual Bonus', AmountFormatter.ui(bonus, 'USD')),
-          if (benefits > 0) _RowData(isEs ? 'Beneficios salud' : 'Health Benefits', AmountFormatter.ui(benefits, 'USD')),
+        _DetailCard(title: s.benefitsExtras, rows: [
+          if (bonus > 0) _RowData(s.bonusLabel, AmountFormatter.ui(bonus, 'USD')),
+          if (benefits > 0) _RowData(s.benefitsLabel, AmountFormatter.ui(benefits, 'USD')),
           if (stockOptions > 0) _RowData('RSU / Stock', AmountFormatter.ui(stockOptions, 'USD')),
-          if (pto > 0) _RowData(isEs ? 'Días PTO' : 'PTO Days', '$pto ${isEs ? "días" : "days"}'),
+          if (pto > 0) _RowData(s.ptoLabel, '$pto ${s.daysLabel}'),
         ]),
         const SizedBox(height: AppSpacing.md),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('${isEs ? "Guardado" : "Saved"}: ${dateFmt.format(createdAt)}',
+          child: Text('${s.savedLabel}: ${dateFmt.format(createdAt)}',
               style: TextStyle(fontSize: AppTextSize.xs, color: ct.textSecondary)),
         ),
         const SizedBox(height: AppSpacing.xl),
@@ -1428,9 +1415,7 @@ class _LegacyBody extends StatelessWidget {
                               : Icons.lock_rounded,
                           size: 20),
                   label: Text(
-                    exporting
-                        ? (isEs ? 'Generando...' : 'Generating...')
-                        : (isEs ? 'Exportar PDF' : 'Export PDF'),
+                    exporting ? s.generating : s.exportPdfLabel,
                     style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: AppTextSize.md),

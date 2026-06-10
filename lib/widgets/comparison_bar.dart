@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/models/comparison_result.dart';
 import '../core/theme/app_theme.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 
 class ComparisonBar extends StatelessWidget {
@@ -433,12 +435,9 @@ class _WinBanner extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final grad = isA ? AppTheme.offerAGradient : AppTheme.offerBGradient;
     final color = isA ? AppTheme.offerADeep : AppTheme.offerBDeep;
-    final title = isA
-        ? (isSp ? 'Oferta A gana' : 'Offer A Wins')
-        : (isSp ? 'Oferta B gana' : 'Offer B Wins');
-    final sub = isSp
-        ? '$advStr más al año en compensación neta'
-        : '$advStr more per year in net total comp';
+    final s = isSp ? const AppStringsEs() : const AppStringsEn();
+    final title = isA ? s.offerAWinsTitle : s.offerBWinsTitle;
+    final sub = '$advStr ${s.morePerYearNet}';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -508,9 +507,7 @@ class _WinBanner extends StatelessWidget {
                 border: Border.all(color: colorScheme.onPrimary.withValues(alpha: 0.3)),
               ),
               child: Text(
-                isSp
-                    ? '+$advStr/año · \$${(adv / 12).toStringAsFixed(0)}/mes'
-                    : '+$advStr/yr · \$${(adv / 12).toStringAsFixed(0)}/mo',
+                s.winnerPerYrPerMo(advStr, (adv / 12).toStringAsFixed(0)),
                 style: TextStyle(
                     color: colorScheme.onPrimary,
                     fontSize: AppTextSize.md,
@@ -536,10 +533,9 @@ class _WinBannerC extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     const grad = AppTheme.offerCGradient;
     const color = AppTheme.offerCDeep;
-    final title = isSp ? 'Oferta C gana' : 'Offer C Wins';
-    final sub = isSp
-        ? '$advStr más al año en compensación neta'
-        : '$advStr more per year in net total comp';
+    final s = isSp ? const AppStringsEs() : const AppStringsEn();
+    final title = s.offerCWinsTitle;
+    final sub = '$advStr ${s.morePerYearNet}';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -609,9 +605,7 @@ class _WinBannerC extends StatelessWidget {
                 border: Border.all(color: colorScheme.onPrimary.withValues(alpha: 0.3)),
               ),
               child: Text(
-                isSp
-                    ? '+$advStr/año · \$${(adv / 12).toStringAsFixed(0)}/mes'
-                    : '+$advStr/yr · \$${(adv / 12).toStringAsFixed(0)}/mo',
+                s.winnerPerYrPerMo(advStr, (adv / 12).toStringAsFixed(0)),
                 style: TextStyle(
                     color: colorScheme.onPrimary,
                     fontSize: AppTextSize.md,
@@ -662,7 +656,7 @@ class _TieBanner extends StatelessWidget {
             child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isSp ? 'Empate perfecto' : "It's a Tie!",
+            Text((isSp ? const AppStringsEs() : const AppStringsEn()).itsATie,
                 style: TextStyle(
                     color: colorScheme.onPrimary,
                     fontSize: AppTextSize.titleLg,
@@ -670,9 +664,7 @@ class _TieBanner extends StatelessWidget {
                     letterSpacing: -0.5)),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              isSp
-                  ? 'Ambas ofertas son prácticamente iguales en compensación total'
-                  : 'Both offers are nearly equal in total comp',
+              (isSp ? const AppStringsEs() : const AppStringsEn()).bothOffersNearlyEqual,
               style: TextStyle(
                   color: colorScheme.onPrimary.withValues(alpha: 0.85),
                   fontSize: AppTextSize.md,

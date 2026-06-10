@@ -8,6 +8,8 @@ import '../core/freemium/iap_service.dart';
 import '../core/language/language_notifier.dart';
 import '../core/theme/app_theme.dart';
 import '../core/services/analytics_service.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 import '../main.dart' show smartHistoryService;
 import 'history_detail_screen.dart';
 
@@ -86,7 +88,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEs ? 'Error al eliminar' : 'Failed to delete'),
+            content: Text((isEs ? const AppStringsEs() : const AppStringsEn()).failedToDelete),
             behavior: SnackBarBehavior.floating,
             backgroundColor: CalcwiseSemanticColors.errorDark,
           ),
@@ -105,25 +107,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final ctrl = TextEditingController(
       text: (row['pin_label'] as String?) ?? '',
     );
+    final s = isEs ? const AppStringsEs() : const AppStringsEn();
     final label = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(isEs ? 'Renombrar escenario' : 'Rename scenario'),
+        title: Text(s.renameScenario),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-              hintText: isEs ? 'Nombre del escenario' : 'Scenario name'),
+          decoration: InputDecoration(hintText: s.scenarioName),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(isEs ? 'Cancelar' : 'Cancel'),
+            child: Text(s.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, ctrl.text),
-            child: Text(isEs ? 'Guardar' : 'Save'),
+            child: Text(s.saveScenario),
           ),
         ],
       ),
@@ -134,24 +136,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<bool?> _confirmDelete(BuildContext context, bool isEs) {
+    final s = isEs ? const AppStringsEs() : const AppStringsEn();
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isEs ? '¿Eliminar oferta?' : 'Delete offer?'),
-        content: Text(
-          isEs
-              ? 'Esta entrada será eliminada permanentemente del historial.'
-              : 'This entry will be permanently removed from history.',
-        ),
+        title: Text(s.deleteOffer),
+        content: Text(s.deleteOfferBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(isEs ? 'Cancelar' : 'Cancel'),
+            child: Text(s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              isEs ? 'Eliminar' : 'Delete',
+              s.delete,
               style: TextStyle(
                   color:
                       CalcwiseSemanticColors.error(Theme.of(ctx).brightness)),
@@ -163,22 +162,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _clearAll(BuildContext context, bool isEs) async {
+    final s = isEs ? const AppStringsEs() : const AppStringsEn();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isEs ? '¿Borrar todo?' : 'Clear all?'),
-        content: Text(
-          isEs ? '¿Eliminar todo el historial?' : 'Delete all saved offers?',
-        ),
+        title: Text(s.clearAllTitle),
+        content: Text(s.clearAllBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(isEs ? 'Cancelar' : 'Cancel'),
+            child: Text(s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              isEs ? 'Borrar' : 'Clear',
+              s.clear,
               style: TextStyle(
                   color:
                       CalcwiseSemanticColors.error(Theme.of(ctx).brightness)),
@@ -195,7 +193,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEs ? 'Error al borrar' : 'Failed to clear'),
+            content: Text((isEs ? const AppStringsEs() : const AppStringsEn()).failedToClear),
             behavior: SnackBarBehavior.floating,
             backgroundColor: CalcwiseSemanticColors.errorDark,
           ),
@@ -209,9 +207,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return ValueListenableBuilder<bool>(
       valueListenable: isSpanishNotifier,
       builder: (context, isEs, _) {
+        final s = isEs ? const AppStringsEs() : const AppStringsEn();
         return Scaffold(
           appBar: AppBar(
-            title: Text(isEs ? 'Ofertas Guardadas' : 'Saved Offers'),
+            title: Text(s.savedOffers),
             actions: [
               ValueListenableBuilder<bool>(
                 valueListenable: freemiumService.hasFullAccessNotifier,
@@ -221,7 +220,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       icon: Icon(Icons.delete_sweep,
                           color: CalcwiseSemanticColors.error(
                               Theme.of(context).brightness)),
-                      tooltip: isEs ? 'Borrar todo' : 'Clear all',
+                      tooltip: s.clearAll,
                       onPressed: () {
                         HapticFeedback.mediumImpact();
                         _clearAll(context, isEs);
@@ -251,14 +250,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 hasScrollBody: false,
                                 child: CalcwiseEmptyState(
                                   icon: Icons.work_outline,
-                                  title: isEs
-                                      ? 'No hay ofertas guardadas'
-                                      : 'No saved offers',
-                                  body: isEs
-                                      ? 'Guarda tu primera comparación para verla aquí'
-                                      : 'Save your first comparison to see it here',
+                                  title: s.noSavedOffers,
+                                  body: s.noSavedOffersBody,
                                   actionLabel: widget.onSwitchToCompare != null
-                                      ? (isEs ? 'Comparar ahora' : 'Compare Now')
+                                      ? s.compareNow
                                       : null,
                                   onAction: widget.onSwitchToCompare,
                                 ),
@@ -269,9 +264,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 SliverToBoxAdapter(
                                   child: _sectionHeader(
                                       context,
-                                      isEs
-                                          ? 'ESCENARIOS GUARDADOS'
-                                          : 'SAVED SCENARIOS',
+                                      s.savedScenarios,
                                       Icons.bookmark_rounded),
                                 ),
                                 SliverList(
@@ -296,9 +289,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 SliverToBoxAdapter(
                                   child: _sectionHeader(
                                       context,
-                                      isEs
-                                          ? 'COMPARACIONES RECIENTES'
-                                          : 'RECENT COMPARISONS',
+                                      s.recentComparisons,
                                       Icons.history_rounded),
                                 ),
                                 SliverList(
@@ -335,6 +326,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   // ── Header ──────────────────────────────────────────────────────────────────
 
   Widget _buildHeader(BuildContext context, bool isEs) {
+    final s = isEs ? const AppStringsEs() : const AppStringsEn();
     return Padding(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
@@ -346,8 +338,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               Text(
                 isPremium
-                    ? '${_history.length} ${isEs ? 'guardadas' : 'saved'}'
-                    : '${_autoSaves.length} / ${MonetizationConfig.freeRingBufferSize} ${isEs ? 'guardadas' : 'saved'}',
+                    ? '${_history.length} ${s.saved}'
+                    : '${_autoSaves.length} / ${MonetizationConfig.freeRingBufferSize} ${s.saved}',
                 style: TextStyle(
                   color: CalcwiseTheme.of(context).textSecondary,
                   fontSize: AppTextSize.md,
@@ -373,7 +365,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     onPressed: () => IAPService.instance.buy(),
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: Text(
-                      isEs ? 'Desbloquear' : 'Unlock',
+                      s.unlock,
                       style: const TextStyle(
                           color: AppTheme.primary,
                           fontWeight: FontWeight.w600,
@@ -427,9 +419,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
             DateTime.now();
 
     final ct = CalcwiseTheme.of(context);
+    final s = isEs ? const AppStringsEs() : const AppStringsEn();
     final title = pinned && pinLabel != null && pinLabel.isNotEmpty
         ? pinLabel
-        : (jobTitle.isNotEmpty ? jobTitle : (isEs ? 'Oferta' : 'Offer'));
+        : (jobTitle.isNotEmpty ? jobTitle : s.offerLabel);
 
     final card = InkWell(
       onTap: () {
@@ -503,7 +496,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Row(children: [
                     Flexible(
                       child: Text(
-                        '${AmountFormatter.ui(monthlyNet, 'USD')}${isEs ? '/mes' : '/mo'}',
+                        '${AmountFormatter.ui(monthlyNet, 'USD')}${s.perMonth}',
                         style: TextStyle(
                             fontSize: AppTextSize.sm, color: ct.textSecondary),
                         overflow: TextOverflow.ellipsis,
@@ -511,7 +504,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
-                      '· ${isEs ? 'Imp.' : 'Tax'} ${taxRate.toStringAsFixed(1)}%',
+                      '· ${s.tax} ${taxRate.toStringAsFixed(1)}%',
                       style: TextStyle(
                           fontSize: AppTextSize.xs, color: ct.textSecondary),
                     ),
@@ -549,7 +542,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
                 Text(
-                  isEs ? 'neto/año' : 'net/yr',
+                  s.netPerYear,
                   style: TextStyle(
                       fontSize: AppTextSize.xs, color: ct.textSecondary),
                 ),
@@ -579,7 +572,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: Row(children: [
                         const Icon(Icons.bookmark_remove_outlined, size: 18),
                         const SizedBox(width: AppSpacing.sm),
-                        Text(isEs ? 'Quitar' : 'Unpin'),
+                        Text(s.unpin),
                       ]),
                     ),
                     PopupMenuItem(
@@ -587,7 +580,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: Row(children: [
                         const Icon(Icons.edit_outlined, size: 18),
                         const SizedBox(width: AppSpacing.sm),
-                        Text(isEs ? 'Renombrar' : 'Rename'),
+                        Text(s.rename),
                       ]),
                     ),
                     PopupMenuItem(
@@ -598,7 +591,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             color: CalcwiseSemanticColors.error(
                                 Theme.of(context).brightness)),
                         const SizedBox(width: AppSpacing.sm),
-                        Text(isEs ? 'Eliminar' : 'Delete',
+                        Text(s.delete,
                             style: TextStyle(
                                 color: CalcwiseSemanticColors.error(
                                     Theme.of(context).brightness))),

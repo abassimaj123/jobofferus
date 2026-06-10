@@ -27,6 +27,8 @@ import '../main.dart' show adService, smartHistoryService;
 import 'history_screen.dart';
 import '../core/engines/offer_engine.dart' show OfferEngine;
 import '../widgets/save_scenario_button.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 
 class ComparisonScreen extends StatefulWidget {
   final JobOffer offerA;
@@ -199,74 +201,75 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       return;
     }
     try {
+      final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
       final pctFmt = NumberFormat('0.0#', 'en_US');
       final a = widget.result.resultA;
       final b = widget.result.resultB;
       final c = widget.result.resultC;
       final hasC = widget.offerC != null && c != null;
       final labelA =
-          widget.offerA.label.isNotEmpty ? widget.offerA.label : 'Offer A';
+          widget.offerA.label.isNotEmpty ? widget.offerA.label : s.offerA;
       final labelB =
-          widget.offerB.label.isNotEmpty ? widget.offerB.label : 'Offer B';
+          widget.offerB.label.isNotEmpty ? widget.offerB.label : s.offerB;
       final labelC = hasC
-          ? (widget.offerC!.label.isNotEmpty ? widget.offerC!.label : 'Offer C')
+          ? (widget.offerC!.label.isNotEmpty ? widget.offerC!.label : s.offerC)
           : null;
 
       List<String> row3(String field, String vA, String vB, [String? vC]) =>
           hasC ? [field, vA, vB, vC ?? ''] : [field, vA, vB];
 
       final rows = [
-        [isSpanish ? 'Campo' : 'Field', labelA, labelB, if (hasC) labelC!],
+        [s.field, labelA, labelB, if (hasC) labelC!],
         row3(
-          isSpanish ? 'Empresa' : 'Company',
+          s.company,
           widget.offerA.company,
           widget.offerB.company,
           hasC ? widget.offerC!.company : null,
         ),
         row3(
-          isSpanish ? 'Ciudad' : 'City',
+          s.city,
           widget.offerA.city,
           widget.offerB.city,
           hasC ? widget.offerC!.city : null,
         ),
         row3(
-          isSpanish ? 'Estado' : 'State',
+          s.stateLabel,
           widget.offerA.stateCode,
           widget.offerB.stateCode,
           hasC ? widget.offerC!.stateCode : null,
         ),
         row3(
-          isSpanish ? 'Salario bruto' : 'Gross Salary',
+          s.grossSalary,
           AmountFormatter.ui(a.grossSalary, 'USD'),
           AmountFormatter.ui(b.grossSalary, 'USD'),
           hasC ? AmountFormatter.ui(c!.grossSalary, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Ingreso neto anual' : 'Net Annual Take-Home',
+          s.netAnnualTakeHome,
           AmountFormatter.ui(a.netTakeHome, 'USD'),
           AmountFormatter.ui(b.netTakeHome, 'USD'),
           hasC ? AmountFormatter.ui(c!.netTakeHome, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Ingreso neto mensual' : 'Net Monthly',
+          s.netMonthly,
           AmountFormatter.ui(a.monthlyTakeHome, 'USD'),
           AmountFormatter.ui(b.monthlyTakeHome, 'USD'),
           hasC ? AmountFormatter.ui(c!.monthlyTakeHome, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Tasa efectiva' : 'Effective Tax Rate',
+          s.effectiveTaxRate,
           '${pctFmt.format(a.effectiveTaxRate)}%',
           '${pctFmt.format(b.effectiveTaxRate)}%',
           hasC ? '${pctFmt.format(c!.effectiveTaxRate)}%' : null,
         ),
         row3(
-          isSpanish ? 'Impuesto federal' : 'Federal Tax',
+          s.federalTax,
           AmountFormatter.ui(a.federalTax, 'USD'),
           AmountFormatter.ui(b.federalTax, 'USD'),
           hasC ? AmountFormatter.ui(c!.federalTax, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Impuesto estatal' : 'State Tax',
+          s.stateTax,
           AmountFormatter.ui(a.stateTax, 'USD'),
           AmountFormatter.ui(b.stateTax, 'USD'),
           hasC ? AmountFormatter.ui(c!.stateTax, 'USD') : null,
@@ -278,7 +281,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           hasC ? AmountFormatter.ui(c!.ficaTax, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Bono anual (neto)' : 'Annual Bonus (after tax)',
+          s.annualBonusAfterTax,
           AmountFormatter.ui(a.bonusAfterTax, 'USD'),
           AmountFormatter.ui(b.bonusAfterTax, 'USD'),
           hasC ? AmountFormatter.ui(c!.bonusAfterTax, 'USD') : null,
@@ -287,43 +290,43 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             b.signingBonusAfterTax > 0 ||
             (c?.signingBonusAfterTax ?? 0) > 0)
           row3(
-            isSpanish ? 'Bono contratación (neto)' : 'Signing Bonus (after tax)',
+            s.signingBonusAfterTax,
             AmountFormatter.ui(a.signingBonusAfterTax, 'USD'),
             AmountFormatter.ui(b.signingBonusAfterTax, 'USD'),
             hasC ? AmountFormatter.ui(c!.signingBonusAfterTax, 'USD') : null,
           ),
         row3(
-          isSpanish ? 'Match 401k' : '401k Match',
+          s.match401k,
           AmountFormatter.ui(a.k401kMatch, 'USD'),
           AmountFormatter.ui(b.k401kMatch, 'USD'),
           hasC ? AmountFormatter.ui(c!.k401kMatch, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Beneficios salud' : 'Health Benefits',
+          s.healthBenefits,
           AmountFormatter.ui(a.healthBenefits, 'USD'),
           AmountFormatter.ui(b.healthBenefits, 'USD'),
           hasC ? AmountFormatter.ui(c!.healthBenefits, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Valor PTO' : 'PTO Value',
+          s.ptoValue,
           AmountFormatter.ui(a.ptoValue, 'USD'),
           AmountFormatter.ui(b.ptoValue, 'USD'),
           hasC ? AmountFormatter.ui(c!.ptoValue, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'RSU anual' : 'Annual RSU',
+          s.annualRsu,
           AmountFormatter.ui(a.annualRsuValue, 'USD'),
           AmountFormatter.ui(b.annualRsuValue, 'USD'),
           hasC ? AmountFormatter.ui(c!.annualRsuValue, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Costo traslado' : 'Commute Cost',
+          s.commuteCost,
           AmountFormatter.ui(a.commuteCost, 'USD'),
           AmountFormatter.ui(b.commuteCost, 'USD'),
           hasC ? AmountFormatter.ui(c!.commuteCost, 'USD') : null,
         ),
         row3(
-          isSpanish ? 'Compensación total neta' : 'Total Net Compensation',
+          s.totalNetCompensation,
           AmountFormatter.ui(a.totalCompensation, 'USD'),
           AmountFormatter.ui(b.totalCompensation, 'USD'),
           hasC ? AmountFormatter.ui(c!.totalCompensation, 'USD') : null,
@@ -343,10 +346,10 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       AnalyticsService.instance.logResultShared();
     } catch (_) {
       if (mounted) {
+        final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                isSpanish ? 'Error al exportar CSV' : 'Failed to export CSV'),
+            content: Text(s.failedExportCsv),
             behavior: SnackBarBehavior.floating,
             backgroundColor: CalcwiseSemanticColors.errorDark,
           ),
@@ -360,19 +363,20 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     try {
       await _exportPdfImpl(isSpanish);
       if (mounted) {
+        final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isSpanish ? 'PDF generado ✓' : 'PDF generated ✓'),
+            content: Text(s.pdfGenerated),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (_) {
       if (mounted) {
+        final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                isSpanish ? 'Error al generar PDF' : 'Failed to export PDF'),
+            content: Text(s.failedExportPdf),
             behavior: SnackBarBehavior.floating,
             backgroundColor: CalcwiseSemanticColors.errorDark,
           ),
@@ -382,6 +386,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   Future<void> _exportPdfImpl(bool isSpanish) async {
+    final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
     final pctFmt = NumberFormat('0.0#', 'en_US');
     final a = widget.result.resultA;
     final b = widget.result.resultB;
@@ -389,12 +394,12 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     final hasC = widget.offerC != null && c != null;
     final winner = widget.result.winner;
     final winnerLabel = winner == Winner.offerA
-        ? (isSpanish ? 'Oferta A gana' : 'Offer A wins')
+        ? s.offerAWins
         : winner == Winner.offerB
-            ? (isSpanish ? 'Oferta B gana' : 'Offer B wins')
+            ? s.offerBWins
             : winner == Winner.offerC
-                ? (isSpanish ? 'Oferta C gana' : 'Offer C wins')
-                : (isSpanish ? 'Empate' : 'Tie');
+                ? s.offerCWins
+                : s.tie;
     final advantage = AmountFormatter.ui(widget.result.annualAdvantage, 'USD');
 
     final pdf = pw.Document();
@@ -442,16 +447,14 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-              isSpanish
-                  ? 'Comparación de Ofertas de Trabajo'
-                  : 'Job Offer Comparison',
+              s.pdfTitle,
               style: pw.TextStyle(
                   fontSize: AppTextSize.titleMd,
                   fontWeight: pw.FontWeight.bold,
                   color: primary)),
           pw.SizedBox(height: 4),
           pw.Text(
-              '${isSpanish ? 'Generado' : 'Generated'}: ${DateFormat('MMM d, yyyy').format(DateTime.now())}',
+              '${s.generated}: ${DateFormat('MMM d, yyyy').format(DateTime.now())}',
               style: pw.TextStyle(fontSize: 9, color: grey)),
           pw.SizedBox(height: 16),
           // Winner banner
@@ -471,7 +474,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                           color: primary)),
                   if (!widget.result.isTie)
                     pw.Text(
-                        '+$advantage ${isSpanish ? "ventaja" : "advantage"}',
+                        '+$advantage ${s.advantage}',
                         style: pw.TextStyle(
                             fontSize: AppTextSize.xs, color: primary)),
                 ]),
@@ -499,14 +502,14 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                 children: [
                   pw.Padding(
                       padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(isSpanish ? 'Métrica' : 'Metric',
+                      child: pw.Text(s.metric,
                           style: pw.TextStyle(
                               fontSize: 10,
                               color: PdfColors.white,
                               fontWeight: pw.FontWeight.bold))),
                   pw.Padding(
                       padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(isSpanish ? 'Oferta A' : 'Offer A',
+                      child: pw.Text(s.offerALabel,
                           textAlign: pw.TextAlign.right,
                           style: pw.TextStyle(
                               fontSize: 10,
@@ -514,7 +517,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                               fontWeight: pw.FontWeight.bold))),
                   pw.Padding(
                       padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(isSpanish ? 'Oferta B' : 'Offer B',
+                      child: pw.Text(s.offerBLabel,
                           textAlign: pw.TextAlign.right,
                           style: pw.TextStyle(
                               fontSize: 10,
@@ -523,7 +526,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   if (hasC)
                     pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text(isSpanish ? 'Oferta C' : 'Offer C',
+                        child: pw.Text(s.offerCLabel,
                             textAlign: pw.TextAlign.right,
                             style: pw.TextStyle(
                                 fontSize: 10,
@@ -531,49 +534,47 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                                 fontWeight: pw.FontWeight.bold))),
                 ],
               ),
-              row(isSpanish ? 'Salario bruto' : 'Gross Salary',
+              row(s.grossSalary,
                   AmountFormatter.ui(a.grossSalary, 'USD'), AmountFormatter.ui(b.grossSalary, 'USD'),
                   bold: true,
                   valC: hasC ? AmountFormatter.ui(c!.grossSalary, 'USD') : null),
-              row(isSpanish ? 'Ingreso neto anual' : 'Net Take-Home (Annual)',
+              row(s.netAnnualTakeHome,
                   AmountFormatter.ui(a.netTakeHome, 'USD'), AmountFormatter.ui(b.netTakeHome, 'USD'),
                   bold: true,
                   valC: hasC ? AmountFormatter.ui(c!.netTakeHome, 'USD') : null),
-              row(isSpanish ? 'Ingreso neto mensual' : 'Net Monthly',
+              row(s.netMonthly,
                   AmountFormatter.ui(a.monthlyTakeHome, 'USD'), AmountFormatter.ui(b.monthlyTakeHome, 'USD'),
                   valC: hasC ? AmountFormatter.ui(c!.monthlyTakeHome, 'USD') : null),
               row(
-                  isSpanish ? 'Tasa efectiva' : 'Effective Tax Rate',
+                  s.effectiveTaxRate,
                   '${pctFmt.format(a.effectiveTaxRate)}%',
                   '${pctFmt.format(b.effectiveTaxRate)}%',
                   valC: hasC ? '${pctFmt.format(c!.effectiveTaxRate)}%' : null),
-              row(isSpanish ? 'Bono anual (neto)' : 'Annual Bonus (after tax)',
+              row(s.annualBonusAfterTax,
                   AmountFormatter.ui(a.bonusAfterTax, 'USD'), AmountFormatter.ui(b.bonusAfterTax, 'USD'),
                   valC: hasC ? AmountFormatter.ui(c!.bonusAfterTax, 'USD') : null),
               if (a.signingBonusAfterTax > 0 ||
                   b.signingBonusAfterTax > 0 ||
                   (c?.signingBonusAfterTax ?? 0) > 0)
                 row(
-                    isSpanish
-                        ? 'Bono contratación (neto)'
-                        : 'Signing Bonus (net)',
+                    s.signingBonusAfterTax,
                     AmountFormatter.ui(a.signingBonusAfterTax, 'USD'),
                     AmountFormatter.ui(b.signingBonusAfterTax, 'USD'),
                     valC: hasC ? AmountFormatter.ui(c!.signingBonusAfterTax, 'USD') : null),
-              row(isSpanish ? 'Match 401k' : '401k Match',
+              row(s.match401k,
                   AmountFormatter.ui(a.k401kMatch, 'USD'), AmountFormatter.ui(b.k401kMatch, 'USD'),
                   valC: hasC ? AmountFormatter.ui(c!.k401kMatch, 'USD') : null),
-              row(isSpanish ? 'Beneficios de salud' : 'Health Benefits',
+              row(s.healthBenefits,
                   AmountFormatter.ui(a.healthBenefits, 'USD'), AmountFormatter.ui(b.healthBenefits, 'USD'),
                   valC: hasC ? AmountFormatter.ui(c!.healthBenefits, 'USD') : null),
-              row(isSpanish ? 'RSU anual' : 'Annual RSU',
+              row(s.annualRsu,
                   AmountFormatter.ui(a.annualRsuValue, 'USD'), AmountFormatter.ui(b.annualRsuValue, 'USD'),
                   valC: hasC ? AmountFormatter.ui(c!.annualRsuValue, 'USD') : null),
-              row(isSpanish ? 'Costo de traslado' : 'Commute Cost',
+              row(s.commuteCost,
                   AmountFormatter.ui(a.commuteCost, 'USD'), AmountFormatter.ui(b.commuteCost, 'USD'),
                   valC: hasC ? AmountFormatter.ui(c!.commuteCost, 'USD') : null),
               row(
-                  isSpanish ? 'Compensación total' : 'Total Compensation',
+                  s.totalNetCompensation,
                   AmountFormatter.ui(a.totalCompensation, 'USD'),
                   AmountFormatter.ui(b.totalCompensation, 'USD'),
                   bold: true,
@@ -582,9 +583,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           ),
           pw.SizedBox(height: 20),
           pw.Text(
-            isSpanish
-                ? 'Nota: Este reporte es solo informativo. Consulte a un asesor fiscal.'
-                : 'Disclaimer: This report is for informational purposes only. Consult a tax professional.',
+            s.pdfDisclaimer,
             style: pw.TextStyle(
                 fontSize: 8, color: grey, fontStyle: pw.FontStyle.italic),
           ),
@@ -606,6 +605,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   void _showExportSheet(BuildContext context, bool isSpanish, bool isPremium) {
     HapticFeedback.lightImpact();
     final ct = CalcwiseTheme.of(context);
+    final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -627,7 +627,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   color: ct.cardBorder,
                   borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: AppSpacing.lg),
-          Text(isSpanish ? 'Exportar' : 'Export',
+          Text(s.export,
               style: TextStyle(
                   fontSize: AppTextSize.subtitle,
                   fontWeight: FontWeight.w700,
@@ -636,10 +636,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           // CSV
           _ExportTile(
             icon: Icons.table_chart_outlined,
-            label: isSpanish ? 'Exportar CSV' : 'Export CSV',
-            subtitle: isSpanish
-                ? 'Compatible con Excel y Sheets'
-                : 'Open in Excel or Sheets',
+            label: s.exportCsv,
+            subtitle: s.exportCsvSubtitle,
             onTap: () {
               Navigator.pop(context);
               _onExportCsv(isSpanish);
@@ -649,10 +647,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           // PDF
           _ExportTile(
             icon: Icons.picture_as_pdf_rounded,
-            label: isSpanish ? 'Exportar PDF' : 'Export PDF',
-            subtitle: isPremium
-                ? (isSpanish ? 'Reporte completo' : 'Full report')
-                : (isSpanish ? 'Premium — desbloquear' : 'Premium — unlock'),
+            label: s.exportPdf,
+            subtitle: isPremium ? s.exportPdfSubtitlePremium : s.exportPdfSubtitleLocked,
             isPremium: !isPremium,
             onTap: () {
               Navigator.pop(context);
@@ -665,7 +661,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(isSpanish ? 'Cancelar' : 'Cancel',
+            child: Text(s.cancel,
                 style: TextStyle(color: ct.textSecondary)),
           ),
         ]),
@@ -710,17 +706,14 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           await DatabaseHelper.instance.countHistory(isPinned: true);
       if (pinnedCount >= MonetizationConfig.freePinnedLimit) {
         if (!mounted) return;
+        final ss = isSpanish ? const AppStringsEs() : const AppStringsEn();
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
           builder: (_) => PaywallSoft(
-            featureTitle: isSpanish
-                ? 'Escenarios guardados ilimitados'
-                : 'Unlimited saved scenarios',
-            featureSubtitle: isSpanish
-                ? 'Guarda y nombra todas tus comparaciones sin límite'
-                : 'Save and name all your comparisons without limit',
+            featureTitle: ss.unlimitedSavedScenarios,
+            featureSubtitle: ss.unlimitedSavedScenariosSubtitle,
             isSpanish: isSpanish,
             onUnlock: () {
               Navigator.pop(context);
@@ -751,9 +744,10 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       setState(() => _saved = true);
     } catch (_) {
       if (!mounted) return;
+      final ss = isSpanish ? const AppStringsEs() : const AppStringsEn();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isSpanish ? 'Error al guardar' : 'Failed to save'),
+          content: Text(ss.failedSave),
           behavior: SnackBarBehavior.floating,
           backgroundColor: CalcwiseSemanticColors.errorDark,
         ),
@@ -777,7 +771,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.ios_share_rounded),
-                tooltip: isSpanish ? 'Exportar' : 'Export',
+                tooltip: (isSpanish ? const AppStringsEs() : const AppStringsEn()).export,
                 onPressed: () =>
                     _showExportSheet(context, isSpanish, isPremium),
               ),
@@ -793,6 +787,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   Widget _buildBody(BuildContext context, bool isSpanish, bool isPremium) {
+    final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
     final a = widget.result.resultA;
     final b = widget.result.resultB;
     final c = widget.result.resultC;
@@ -876,16 +871,16 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             child: _OfferHeader(
             labelA: widget.offerA.label.isNotEmpty
                 ? widget.offerA.label
-                : (isSpanish ? 'Oferta A' : 'Offer A'),
+                : s.offerA,
             labelB: widget.offerB.label.isNotEmpty
                 ? widget.offerB.label
-                : (isSpanish ? 'Oferta B' : 'Offer B'),
+                : s.offerB,
             companyA: widget.offerA.company,
             companyB: widget.offerB.company,
             labelC: has3
                 ? (widget.offerC!.label.isNotEmpty
                     ? widget.offerC!.label
-                    : (isSpanish ? 'Oferta C' : 'Offer C'))
+                    : s.offerC)
                 : null,
             companyC: has3 ? widget.offerC!.company : null,
           ),        // closes _OfferHeader
@@ -894,26 +889,24 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
           // ── Core comparison card ───────────────────────────────────────
           SectionCard(
-            title: isSpanish ? 'Salario Neto' : 'After-Tax Income',
+            title: s.afterTaxIncome,
             children: [
               bar(
-                label: isSpanish ? 'Salario neto anual' : 'Annual take-home',
+                label: s.annualTakeHome,
                 va: a.netTakeHome,
                 vb: b.netTakeHome,
                 vc: c?.netTakeHome,
                 winner: widget.result.categoryWinners['takeHome'],
               ),
               bar(
-                label: isSpanish ? 'Mensual' : 'Monthly',
+                label: s.monthly,
                 va: a.monthlyTakeHome,
                 vb: b.monthlyTakeHome,
                 vc: c?.monthlyTakeHome,
                 winner: widget.result.categoryWinners['takeHome'],
               ),
               bar(
-                label: isSpanish
-                    ? 'Tasa impositiva efectiva'
-                    : 'Effective tax rate',
+                label: s.effectiveTaxRateLabel,
                 va: a.effectiveTaxRate,
                 vb: b.effectiveTaxRate,
                 vc: c?.effectiveTaxRate,
@@ -926,23 +919,23 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
           // ── Tax breakdown ──────────────────────────────────────────────
           SectionCard(
-            title: isSpanish ? 'Desglose de Impuestos' : 'Tax Breakdown',
+            title: s.taxBreakdown,
             children: [
               bar(
-                label: isSpanish ? 'Impuesto federal' : 'Federal tax',
+                label: s.federalTaxLabel,
                 va: a.federalTax,
                 vb: b.federalTax,
                 vc: c?.federalTax,
               ),
               bar(
-                label: isSpanish ? 'Impuesto estatal' : 'State tax',
+                label: s.stateTaxLabel,
                 va: a.stateTax,
                 vb: b.stateTax,
                 vc: c?.stateTax,
               ),
               if (a.localTax > 0 || b.localTax > 0 || (c?.localTax ?? 0) > 0)
                 bar(
-                  label: isSpanish ? 'Impuesto ciudad' : 'City/local tax',
+                  label: s.cityLocalTax,
                   va: a.localTax,
                   vb: b.localTax,
                   vc: c?.localTax,
@@ -959,15 +952,13 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
           // ── Benefits & extras ──────────────────────────────────────────
           SectionCard(
-            title: isSpanish ? 'Beneficios y Extras' : 'Benefits & Extras',
+            title: s.benefitsAndExtras,
             children: [
               if (a.annualBonus > 0 ||
                   b.annualBonus > 0 ||
                   (c?.annualBonus ?? 0) > 0)
                 bar(
-                  label: isSpanish
-                      ? 'Bono neto anual'
-                      : 'Annual bonus (after tax)',
+                  label: s.annualBonusAfterTaxLabel,
                   va: a.bonusAfterTax,
                   vb: b.bonusAfterTax,
                   vc: c?.bonusAfterTax,
@@ -977,9 +968,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   b.signingBonusAfterTax > 0 ||
                   (c?.signingBonusAfterTax ?? 0) > 0)
                 bar(
-                  label: isSpanish
-                      ? 'Bono de contratación (neto)'
-                      : 'Signing bonus (after tax)',
+                  label: s.signingBonusAfterTaxLabel,
                   va: a.signingBonusAfterTax,
                   vb: b.signingBonusAfterTax,
                   vc: c?.signingBonusAfterTax,
@@ -988,9 +977,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   b.k401kMatch > 0 ||
                   (c?.k401kMatch ?? 0) > 0)
                 bar(
-                  label: isSpanish
-                      ? '401k (aporte empleador)'
-                      : '401k employer match',
+                  label: s.k401kEmployerMatch,
                   va: a.k401kMatch,
                   vb: b.k401kMatch,
                   vc: c?.k401kMatch,
@@ -1000,7 +987,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   b.healthBenefits > 0 ||
                   (c?.healthBenefits ?? 0) > 0)
                 bar(
-                  label: isSpanish ? 'Salud + dental' : 'Health + dental',
+                  label: s.healthPlusDental,
                   va: a.healthBenefits,
                   vb: b.healthBenefits,
                   vc: c?.healthBenefits,
@@ -1008,7 +995,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                 ),
               if (a.ptoValue > 0 || b.ptoValue > 0 || (c?.ptoValue ?? 0) > 0)
                 bar(
-                  label: isSpanish ? 'Valor vacaciones (PTO)' : 'PTO value',
+                  label: s.ptoValueLabel,
                   va: a.ptoValue,
                   vb: b.ptoValue,
                   vc: c?.ptoValue,
@@ -1018,7 +1005,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   b.annualRsuValue > 0 ||
                   (c?.annualRsuValue ?? 0) > 0)
                 bar(
-                  label: isSpanish ? 'RSU / Stock anual' : 'Annual RSU / Stock',
+                  label: s.annualRsuStock2,
                   va: a.annualRsuValue,
                   vb: b.annualRsuValue,
                   vc: c?.annualRsuValue,
@@ -1028,8 +1015,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                   b.commuteCost > 0 ||
                   (c?.commuteCost ?? 0) > 0)
                 bar(
-                  label:
-                      isSpanish ? 'Costo transporte (−)' : 'Commute cost (−)',
+                  label: s.commuteCosMinus,
                   va: a.commuteCost,
                   vb: b.commuteCost,
                   vc: c?.commuteCost,
@@ -1056,19 +1042,17 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
           // ── Total compensation ─────────────────────────────────────────
           SectionCard(
-            title: isSpanish
-                ? 'Compensación Total Neta'
-                : 'Net Total Compensation',
+            title: s.netTotalCompensation,
             children: [
               bar(
-                label: isSpanish ? 'Total anual neto' : 'Total annual net',
+                label: s.totalAnnualNet,
                 va: a.totalCompensation,
                 vb: b.totalCompensation,
                 vc: c?.totalCompensation,
                 winner: widget.result.categoryWinners['total'],
               ),
               bar(
-                label: isSpanish ? 'Total mensual neto' : 'Total monthly net',
+                label: s.totalMonthlyNet,
                 va: a.monthlyTotalComp,
                 vb: b.monthlyTotalComp,
                 vc: c?.monthlyTotalComp,
@@ -1081,14 +1065,10 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           // ── CoL-adjusted (Premium) ─────────────────────────────────────
           if (isPremium) ...[
             SectionCard(
-              title: isSpanish
-                  ? 'Poder Adquisitivo Real'
-                  : 'Real Purchasing Power (CoL-adjusted)',
+              title: s.realPurchasingPower,
               children: [
                 bar(
-                  label: isSpanish
-                      ? 'Salario ajustado por costo de vida'
-                      : 'CoL-adjusted take-home',
+                  label: s.colAdjustedTakeHome,
                   va: a.colAdjustedTakeHome,
                   vb: b.colAdjustedTakeHome,
                   vc: c?.colAdjustedTakeHome,
@@ -1099,12 +1079,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             const SizedBox(height: AppSpacing.md),
           ] else ...[
             PaywallSoft(
-              featureTitle: isSpanish
-                  ? 'Poder adquisitivo real por ciudad'
-                  : 'Real purchasing power by city',
-              featureSubtitle: isSpanish
-                  ? '\$100k en NYC ≠ \$100k en Dallas'
-                  : '\$100k in NYC ≠ \$100k in Dallas',
+              featureTitle: s.realPurchasingPowerByCity,
+              featureSubtitle: s.nyc100kNeqDallas,
               isSpanish: isSpanish,
               onUnlock: () => _showPaywall(context, isSpanish),
             ),
@@ -1145,12 +1121,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             const SizedBox(height: AppSpacing.md),
           ] else ...[
             PaywallSoft(
-              featureTitle: isSpanish
-                  ? 'Análisis de riqueza a largo plazo'
-                  : 'Long-term wealth analysis',
-              featureSubtitle: isSpanish
-                  ? 'Proyección 5 años · 401k a jubilación · Riqueza neta · Punto de equilibrio'
-                  : '5-year projection · 401k at retirement · Net wealth · Break-even',
+              featureTitle: s.longTermWealthAnalysis,
+              featureSubtitle: s.longTermWealthSubtitle,
               isSpanish: isSpanish,
               onUnlock: () => _showPaywall(context, isSpanish),
             ),
@@ -1175,7 +1147,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                     onPressed: null,
                     icon: Icon(Icons.bookmark_rounded,
                         size: 18, color: AppTheme.primary),
-                    label: Text(isSpanish ? 'Escenario guardado' : 'Scenario saved'),
+                    label: Text(s.scenarioSaved),
                   )
                 : SaveScenarioButton(
                     onSave: _saveScenario, isSpanish: isSpanish),
@@ -1190,8 +1162,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                 _exportPdf(isSpanish);
               },
               icon: const Icon(Icons.picture_as_pdf_rounded),
-              label: Text(
-                  isSpanish ? 'Exportar reporte PDF' : 'Export PDF Report'),
+              label: Text(s.exportPdfReport),
             ),
           const SizedBox(height: AppSpacing.xl),
         ],
@@ -1215,6 +1186,7 @@ class _HeroKpiCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = result.resultA;
     final b = result.resultB;
+    final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
 
     final String heroLabel;
     final String heroValue;
@@ -1223,41 +1195,32 @@ class _HeroKpiCard extends StatelessWidget {
     final String statLabelB;
 
     if (result.isTie) {
-      heroLabel = isSpanish ? 'Compensación total' : 'Total Compensation';
+      heroLabel = s.totalCompensation;
       heroValue = AmountFormatter.ui(a.totalCompensation, 'USD');
-      heroSecondary = isSpanish
-          ? 'Las dos ofertas son equivalentes'
-          : 'Both offers are equivalent';
-      statLabelA = isSpanish ? 'Neto anual A' : 'Annual net A';
-      statLabelB = isSpanish ? 'Neto anual B' : 'Annual net B';
+      heroSecondary = s.bothOffersEquivalent;
+      statLabelA = s.annualNetA;
+      statLabelB = s.annualNetB;
     } else {
       final isAWinner = result.winner == Winner.offerA;
       final isCWinner = result.winner == Winner.offerC;
       final winnerResult = result.winnerResult;
       final String winnerLabel;
       if (isCWinner) {
-        winnerLabel = isSpanish ? 'Oferta C' : 'Offer C';
+        winnerLabel = s.offerC;
       } else {
-        winnerLabel = isAWinner
-            ? (isSpanish ? 'Oferta A' : 'Offer A')
-            : (isSpanish ? 'Oferta B' : 'Offer B');
+        winnerLabel = isAWinner ? s.offerA : s.offerB;
       }
       final bgColor = isCWinner
           ? AppTheme.offerCDeep
           : (isAWinner ? AppTheme.offerADeep : AppTheme.offerBDeep);
-      heroLabel =
-          isSpanish ? '$winnerLabel — Neto anual' : '$winnerLabel — Annual Net';
+      heroLabel = s.winnerAnnualNetLabel(winnerLabel);
       heroValue = AmountFormatter.ui(winnerResult.netTakeHome, 'USD');
-      heroSecondary = isSpanish
-          ? 'Ventaja: ${AmountFormatter.ui(result.annualAdvantage, 'USD')}/año'
-          : 'Advantage: ${AmountFormatter.ui(result.annualAdvantage, 'USD')}/yr';
-      statLabelA = isSpanish ? 'Tasa efectiva' : 'Effective rate';
-      statLabelB = isSpanish ? 'Comp. total' : 'Total comp';
+      heroSecondary = s.winnerAdvantage(AmountFormatter.ui(result.annualAdvantage, 'USD'));
+      statLabelA = s.effectiveRate;
+      statLabelB = s.totalComp;
 
       return Semantics(
-        label: isSpanish
-            ? '$winnerLabel gana con ${AmountFormatter.ui(winnerResult.netTakeHome, 'USD')} neto anual, ventaja de ${AmountFormatter.ui(result.annualAdvantage, 'USD')}'
-            : '$winnerLabel wins with ${AmountFormatter.ui(winnerResult.netTakeHome, 'USD')} annual net, advantage of ${AmountFormatter.ui(result.annualAdvantage, 'USD')}',
+        label: s.semanticsWinnerKpi(winnerLabel, AmountFormatter.ui(winnerResult.netTakeHome, 'USD'), AmountFormatter.ui(result.annualAdvantage, 'USD')),
         child: CalcwiseHeroCard(
           label: heroLabel,
           value: heroValue,
@@ -1278,9 +1241,7 @@ class _HeroKpiCard extends StatelessWidget {
     }
 
     return Semantics(
-      label: isSpanish
-          ? 'Las dos ofertas son equivalentes. Compensación total: ${AmountFormatter.ui(a.totalCompensation, 'USD')}'
-          : 'Both offers are equivalent. Total compensation: ${AmountFormatter.ui(a.totalCompensation, 'USD')}',
+      label: s.semanticsEquivalent(AmountFormatter.ui(a.totalCompensation, 'USD')),
       child: CalcwiseHeroCard(
         label: heroLabel,
         value: heroValue,
@@ -1434,7 +1395,7 @@ class _ProjectionCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg, AppSpacing.mdPlus, AppSpacing.lg, AppSpacing.sm),
             child: Text(
-              isSpanish ? 'Proyección 5 Años' : '5-Year Projection',
+              (isSpanish ? const AppStringsEs() : const AppStringsEn()).projection5Year,
               style: const TextStyle(
                   fontSize: AppTextSize.md, fontWeight: FontWeight.w700),
             ),
@@ -1446,11 +1407,13 @@ class _ProjectionCard extends StatelessWidget {
               children: <Widget>[
                 ...List.generate(
                     5,
-                    (i) => Padding(
+                    (i) {
+                      final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
+                      return Padding(
                           padding: const EdgeInsets.symmetric(
                               vertical: AppSpacing.xxs),
                           child: ComparisonBar(
-                            label: isSpanish ? 'Año ${i + 1}' : 'Year ${i + 1}',
+                            label: s.yearN(i + 1),
                             valueA: i < projA.length ? projA[i] : 0,
                             valueB: i < projB.length ? projB[i] : 0,
                             winner: (i < projA.length && i < projB.length)
@@ -1460,12 +1423,13 @@ class _ProjectionCard extends StatelessWidget {
                                 : null,
                             isSpanish: isSpanish,
                           ),
-                        )),
+                        );
+                    }),
                 const SizedBox(height: AppSpacing.sm),
                 const Divider(),
                 const SizedBox(height: AppSpacing.xs),
                 ComparisonBar(
-                  label: isSpanish ? 'TOTAL 5 años' : 'TOTAL 5 years',
+                  label: (isSpanish ? const AppStringsEs() : const AppStringsEn()).total5Years,
                   valueA: totalA,
                   valueB: totalB,
                   winner: totalA >= totalB ? Winner.offerA : Winner.offerB,
@@ -1578,9 +1542,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      isSp
-                          ? 'Calendario de Adquisición RSU'
-                          : 'RSU Vesting Schedule',
+                      (isSp ? const AppStringsEs() : const AppStringsEn()).rsuVestingSchedule,
                       style: const TextStyle(
                           fontSize: AppTextSize.md,
                           fontWeight: FontWeight.w700,
@@ -1609,14 +1571,14 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                   Row(children: [
                     Expanded(
                         child: _GrantChip(
-                      label: isSp ? 'Total concesión A' : 'Total grant A',
+                      label: (isSp ? const AppStringsEs() : const AppStringsEn()).totalGrantA,
                       value: AmountFormatter.ui(grantA, 'USD'),
                       color: AppTheme.offerADeep,
                     )),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                         child: _GrantChip(
-                      label: isSp ? 'Total concesión B' : 'Total grant B',
+                      label: (isSp ? const AppStringsEs() : const AppStringsEn()).totalGrantB,
                       value: AmountFormatter.ui(grantB, 'USD'),
                       color: AppTheme.offerBDeep,
                     )),
@@ -1624,7 +1586,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                           child: _GrantChip(
-                        label: isSp ? 'Total concesión C' : 'Total grant C',
+                        label: (isSp ? const AppStringsEs() : const AppStringsEn()).totalGrantC,
                         value: AmountFormatter.ui(grantC, 'USD'),
                         color: AppTheme.offerCDeep,
                       )),
@@ -1639,7 +1601,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                       child: Text(
-                        isSp ? 'Oferta A' : 'Offer A',
+                        (isSp ? const AppStringsEs() : const AppStringsEn()).offerA,
                         style: TextStyle(
                             fontSize: AppTextSize.xs,
                             fontWeight: FontWeight.w700,
@@ -1668,7 +1630,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                       child: Text(
-                        isSp ? 'Oferta B' : 'Offer B',
+                        (isSp ? const AppStringsEs() : const AppStringsEn()).offerB,
                         style: TextStyle(
                             fontSize: AppTextSize.xs,
                             fontWeight: FontWeight.w700,
@@ -1697,7 +1659,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                       child: Text(
-                        isSp ? 'Oferta C' : 'Offer C',
+                        (isSp ? const AppStringsEs() : const AppStringsEn()).offerC,
                         style: TextStyle(
                             fontSize: AppTextSize.xs,
                             fontWeight: FontWeight.w700,
@@ -1738,9 +1700,7 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
-                            isSp
-                                ? 'Las RSU se gravan como ingreso ordinario en la fecha de adquisición. Los valores mostrados son estimaciones previas a impuestos. El valor real depende del precio de la acción al momento de la adquisición.'
-                                : 'RSU values shown are pre-tax estimates. Actual vesting value depends on stock price at vesting date. RSUs are taxed as ordinary income.',
+                            (isSp ? const AppStringsEs() : const AppStringsEn()).rsuDisclaimer,
                             style: TextStyle(
                                 fontSize: AppTextSize.xs,
                                 color: ct.textSecondary,
@@ -1807,22 +1767,23 @@ class _VestHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ct = CalcwiseTheme.of(context);
+    final s = isSp ? const AppStringsEs() : const AppStringsEn();
     return Row(children: [
       SizedBox(
           width: 48,
-          child: Text(isSp ? 'Año' : 'Year',
+          child: Text(s.vestYear,
               style: TextStyle(
                   fontSize: AppTextSize.xs,
                   fontWeight: FontWeight.w700,
                   color: ct.textSecondary))),
       Expanded(
-          child: Text(isSp ? 'Vest bruto' : 'Gross vest',
+          child: Text(s.grossVest,
               style: TextStyle(
                   fontSize: AppTextSize.xs,
                   fontWeight: FontWeight.w700,
                   color: ct.textSecondary))),
       Expanded(
-          child: Text(isSp ? 'Neto (est.)' : 'Net (est.)',
+          child: Text(s.netEst,
               textAlign: TextAlign.right,
               style: TextStyle(
                   fontSize: AppTextSize.xs,
@@ -1830,7 +1791,7 @@ class _VestHeader extends StatelessWidget {
                   color: ct.textSecondary))),
       SizedBox(
           width: 52,
-          child: Text(isSp ? 'Progreso' : 'Progress',
+          child: Text(s.progress,
               textAlign: TextAlign.right,
               style: TextStyle(
                   fontSize: AppTextSize.xs,
@@ -1860,9 +1821,8 @@ class _VestRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct = total > 0 ? (cumulative / total) * 100 : 0.0;
-    final yearLabel = year == 1
-        ? (isSp ? 'Año 1 (cliff)' : 'Year 1 (cliff)')
-        : (isSp ? 'Año $year' : 'Year $year');
+    final s = isSp ? const AppStringsEs() : const AppStringsEn();
+    final yearLabel = year == 1 ? s.yearNCliff(1) : s.yearN(year);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(children: [
@@ -1880,7 +1840,7 @@ class _VestRow extends StatelessWidget {
             Text(AmountFormatter.ui(vested, 'USD'),
                 style: const TextStyle(
                     fontSize: AppTextSize.sm, fontWeight: FontWeight.w600)),
-            Text('${(taxRate * 100).toStringAsFixed(1)}% ${isSp ? 'imp. est.' : 'tax est.'}',
+            Text('${(taxRate * 100).toStringAsFixed(1)}% ${(isSp ? const AppStringsEs() : const AppStringsEn()).taxEst}',
                 style: TextStyle(fontSize: AppTextSize.xs, color: CalcwiseTheme.of(context).textSecondary)),
           ]),
         ),
@@ -1920,6 +1880,7 @@ class _NegotiationTipsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ct = CalcwiseTheme.of(context);
+    final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
     final a = result.resultA;
     final b = result.resultB;
     final isAWinner = result.winner == Winner.offerA;
@@ -1927,9 +1888,7 @@ class _NegotiationTipsCard extends StatelessWidget {
     final winnerNet = isAWinner ? a.netTakeHome : b.netTakeHome;
     final gap = winnerNet - loserNet;
     final counterTarget = loserNet + gap * 0.5;
-    final loserLabel = isAWinner
-        ? (isSpanish ? 'Oferta B' : 'Offer B')
-        : (isSpanish ? 'Oferta A' : 'Offer A');
+    final loserLabel = isAWinner ? s.offerB : s.offerA;
 
     return Container(
       decoration: BoxDecoration(
@@ -1948,7 +1907,7 @@ class _NegotiationTipsCard extends StatelessWidget {
                   size: 18, color: AppTheme.accent),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                isSpanish ? 'Consejos de Negociación' : 'Negotiation Tips',
+                s.negotiationTips,
                 style: const TextStyle(
                     fontSize: AppTextSize.md,
                     fontWeight: FontWeight.w700,
@@ -1966,7 +1925,7 @@ class _NegotiationTipsCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isSpanish ? 'Brecha entre ofertas' : 'Offer gap',
+                      s.offerGap,
                       style: TextStyle(
                           fontSize: AppTextSize.sm, color: ct.textSecondary),
                     ),
@@ -1987,9 +1946,7 @@ class _NegotiationTipsCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: Text(
-                    isSpanish
-                        ? 'Si está negociando $loserLabel, pida ${AmountFormatter.ui(counterTarget, 'USD')} neto anual para dividir la diferencia a la mitad.'
-                        : 'If negotiating $loserLabel, counter at ${AmountFormatter.ui(counterTarget, 'USD')}/yr net to split the difference.',
+                    s.counterOffer(loserLabel, AmountFormatter.ui(counterTarget, 'USD')),
                     style: TextStyle(
                         fontSize: AppTextSize.sm,
                         color: ct.textPrimary,
@@ -1998,9 +1955,7 @@ class _NegotiationTipsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  isSpanish
-                      ? 'También considera: PTO extra, trabajo remoto, bono de firma o revisión salarial a 6 meses.'
-                      : 'Also consider: extra PTO, remote work, signing bonus, or a 6-month salary review.',
+                  s.alsoConsider,
                   style: TextStyle(
                       fontSize: AppTextSize.xs,
                       color: ct.textSecondary,
@@ -2031,21 +1986,21 @@ class _BreakEvenCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ct = CalcwiseTheme.of(context);
+    final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
     final months = result.breakEvenMonths!;
     final years = months ~/ 12;
     final rem = months % 12;
-    final isSp = isSpanish;
 
     final winnerLabel = result.winner == Winner.offerA ? offerA.label : offerB.label;
     final loserLabel = result.winner == Winner.offerA ? offerB.label : offerA.label;
 
-    String duration;
+    final String duration;
     if (years == 0) {
-      duration = isSp ? '$months meses' : '$months months';
+      duration = s.monthsDuration(months);
     } else if (rem == 0) {
-      duration = isSp ? '$years ${years == 1 ? "año" : "años"}' : '$years ${years == 1 ? "year" : "years"}';
+      duration = s.yearsDuration(years);
     } else {
-      duration = isSp ? '$years a. $rem m.' : '${years}y ${rem}m';
+      duration = s.yearsMonthsDuration(years, rem);
     }
 
     return Container(
@@ -2065,7 +2020,7 @@ class _BreakEvenCard extends StatelessWidget {
           const Icon(Icons.swap_vert_rounded, color: AppTheme.primary, size: 18),
           const SizedBox(width: AppSpacing.xs),
           Text(
-            isSp ? 'Punto de equilibrio' : 'Break-even analysis',
+            s.breakEvenAnalysis,
             style: const TextStyle(
                 fontSize: AppTextSize.md,
                 fontWeight: FontWeight.w700,
@@ -2085,16 +2040,14 @@ class _BreakEvenCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Text(
-              isSp ? '→ $winnerLabel supera a $loserLabel' : '→ $winnerLabel overtakes $loserLabel',
+              s.overtakes(winnerLabel, loserLabel),
               style: TextStyle(fontSize: AppTextSize.sm, color: ct.textSecondary),
             ),
           ),
         ]),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          isSp
-              ? '$loserLabel tiene ventaja de bono inicial. Pero $winnerLabel paga más cada año — después de $duration, $winnerLabel habrá ganado más en total.'
-              : '$loserLabel has a signing bonus head start. But $winnerLabel pays more each year — after $duration, $winnerLabel\'s cumulative earnings surpass $loserLabel\'s.',
+          s.breakEvenBody(loserLabel, winnerLabel, duration),
           style: TextStyle(
               fontSize: AppTextSize.sm,
               color: ct.textSecondary,
@@ -2202,7 +2155,7 @@ class _WealthBuildingCard extends StatelessWidget {
                 size: 16, color: AppTheme.primary),
             const SizedBox(width: AppSpacing.xs),
             Text(
-              isSp ? 'Construcción de riqueza' : 'Wealth Building',
+              (isSp ? const AppStringsEs() : const AppStringsEn()).wealthBuilding,
               style: const TextStyle(
                   fontSize: AppTextSize.md, fontWeight: FontWeight.w700),
             ),
@@ -2214,30 +2167,24 @@ class _WealthBuildingCard extends StatelessWidget {
               AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
           child: Column(children: [
             metricRow(
-              isSp ? 'Compensación total — 5 años' : 'Total Earnings — 5 Years',
-              isSp
-                  ? 'Suma acumulada con aumentos anuales'
-                  : 'Cumulative total with annual raises',
+              (isSp ? const AppStringsEs() : const AppStringsEn()).totalEarnings5Years,
+              (isSp ? const AppStringsEs() : const AppStringsEn()).cumulativeWithRaises,
               cum5A,
               cum5B,
               winA_cum,
             ),
             Divider(height: 20, color: ct.cardBorder),
             metricRow(
-              isSp ? '401k a la jubilación (30 años)' : '401k Balance at Retirement (30 yr)',
-              isSp
-                  ? '6% aporte + match · 7% retorno compuesto'
-                  : '6% contrib + match · 7% compounded return',
+              (isSp ? const AppStringsEs() : const AppStringsEn()).k401kRetirement30yr,
+              (isSp ? const AppStringsEs() : const AppStringsEn()).contrib6PctMatch7Pct,
               k401kA,
               k401kB,
               winA_k,
             ),
             Divider(height: 20, color: ct.cardBorder),
             metricRow(
-              isSp ? 'Riqueza neta en 5 años' : 'Net Investable Wealth — 5 Years',
-              isSp
-                  ? '20% tasa de ahorro · 6% retorno anual'
-                  : '20% savings rate · 6% annual return',
+              (isSp ? const AppStringsEs() : const AppStringsEn()).netInvestableWealth5Yr,
+              (isSp ? const AppStringsEs() : const AppStringsEn()).savings20Pct6PctReturn,
               wealthA,
               wealthB,
               winA_w,
@@ -2253,9 +2200,7 @@ class _WealthBuildingCard extends StatelessWidget {
                 bottom: Radius.circular(AppRadius.xl)),
           ),
           child: Text(
-            isSp
-                ? '* Proyecciones estimativas basadas en tasas 2025. La rentabilidad real puede variar.'
-                : '* Projections are estimates based on 2025 rates. Actual returns may vary.',
+            (isSp ? const AppStringsEs() : const AppStringsEn()).wealthDisclaimer,
             style: TextStyle(
                 fontSize: AppTextSize.xs,
                 color: ct.textSecondary,
@@ -2337,24 +2282,20 @@ class _BenchmarkCallout extends StatelessWidget {
     final IconData icon;
     final String label;
 
+    final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
+    final medianK = (median / 1000).round();
     if (pctDiff >= 10) {
       chipColor = AppTheme.successGreen;
       icon = Icons.trending_up_rounded;
-      label = isSpanish
-          ? '+$absDiff% sobre la mediana estatal ($stateCode \$${(median / 1000).round()}k)'
-          : '+$absDiff% above $stateCode state median (\$${(median / 1000).round()}k)';
+      label = s.aboveBenchmark(stateCode, medianK, absDiff);
     } else if (pctDiff <= -10) {
       chipColor = AppTheme.errorRed;
       icon = Icons.trending_down_rounded;
-      label = isSpanish
-          ? '${absDiff}% bajo la mediana estatal ($stateCode \$${(median / 1000).round()}k)'
-          : '${absDiff}% below $stateCode state median (\$${(median / 1000).round()}k)';
+      label = s.belowBenchmark(stateCode, medianK, absDiff);
     } else {
       chipColor = AppTheme.warningOrange;
       icon = Icons.remove_rounded;
-      label = isSpanish
-          ? 'Cerca de la mediana estatal ($stateCode \$${(median / 1000).round()}k, ${pctDiff >= 0 ? '+' : ''}${pctDiff.round()}%)'
-          : 'Near $stateCode state median (\$${(median / 1000).round()}k, ${pctDiff >= 0 ? '+' : ''}${pctDiff.round()}%)';
+      label = s.nearBenchmark(stateCode, medianK, '${pctDiff >= 0 ? '+' : ''}${pctDiff.round()}');
     }
 
     return Semantics(
@@ -2372,7 +2313,7 @@ class _BenchmarkCallout extends StatelessWidget {
           Icon(Icons.bar_chart_rounded, size: 14, color: chipColor),
           const SizedBox(width: AppSpacing.xs),
           Text(
-            isSpanish ? 'BLS 2025 — ' : 'BLS 2025 — ',
+            s.bls2025Prefix,
             style: TextStyle(
                 fontSize: AppTextSize.xs,
                 color: chipColor.withValues(alpha: 0.7),

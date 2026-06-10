@@ -26,6 +26,8 @@ import 'core/language/language_notifier.dart';
 import 'core/services/deadline_notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/splash_screen.dart';
+import 'l10n/strings_en.dart';
+import 'l10n/strings_es.dart';
 
 final adService = CalcwiseAdService(
   config: CalcwiseAdConfig(
@@ -111,7 +113,7 @@ class JobOfferApp extends StatelessWidget {
       builder: (_, isSpanish, __) => ValueListenableBuilder<ThemeMode>(
         valueListenable: themeModeService.notifier,
         builder: (_, themeMode, __) => MaterialApp(
-          title: isSpanish ? 'Comparar Ofertas' : 'Job Offer US',
+          title: isSpanish ? const AppStringsEs().appTitle : const AppStringsEn().appTitle,
           debugShowCheckedModeBanner: false,
           builder: (context, child) {
             if (!MediaQuery.of(context).disableAnimations) return child!;

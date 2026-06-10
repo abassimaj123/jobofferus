@@ -6,6 +6,8 @@ import '../core/offer_parser.dart';
 import '../core/models/job_offer.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/theme/app_theme.dart';
+import '../l10n/strings_en.dart';
+import '../l10n/strings_es.dart';
 
 /// Full-screen dialog that lets the user paste an offer letter, parses it
 /// with [OfferParser], and applies a confirmed subset of fields back to the
@@ -73,9 +75,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
     if (!await _canParse()) {
       setState(() {
         _busy = false;
-        _error = _isSp
-            ? 'Límite gratuito: 3 análisis por día. Premium para ilimitado.'
-            : 'Free limit: 3 parses per day. Premium for unlimited.';
+        _error = _isSp ? const AppStringsEs().freeLimitReached : const AppStringsEn().freeLimitReached;
       });
       return;
     }
@@ -101,9 +101,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
           'company': result.company != null,
         });
       if (result.isEmpty) {
-        _error = _isSp
-            ? 'No se encontraron datos. Pega más contexto.'
-            : 'No data found. Paste more of the letter.';
+        _error = _isSp ? const AppStringsEs().noDataFound : const AppStringsEn().noDataFound;
       }
     });
   }
@@ -150,9 +148,10 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
   @override
   Widget build(BuildContext context) {
     final ct = CalcwiseTheme.of(context);
+    final s = _isSp ? const AppStringsEs() : const AppStringsEn();
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isSp ? 'Analizar carta de oferta' : 'Parse Offer Letter'),
+        title: Text(s.parseOfferLetter),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).pop(),
@@ -178,9 +177,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      _isSp
-                          ? 'Pega el texto de tu oferta. Detectaremos salario, bono, equity y más.'
-                          : 'Paste your offer text. We will detect salary, bonus, equity, and more.',
+                      s.parseOfferHint,
                       style: TextStyle(
                           fontSize: AppTextSize.sm,
                           color: ct.textSecondary,
@@ -197,9 +194,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
                   decoration: InputDecoration(
-                    hintText: _isSp
-                        ? 'Pega aquí el texto de la oferta…'
-                        : 'Paste offer letter text here…',
+                    hintText: s.pasteOfferHere,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
@@ -228,7 +223,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.auto_awesome_rounded, size: 18),
-                    label: Text(_isSp ? 'Analizar' : 'Parse'),
+                    label: Text(s.parse),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.smPlus),
@@ -238,7 +233,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
                         ? _applySelected
                         : null,
                     icon: const Icon(Icons.check_rounded, size: 18),
-                    label: Text(_isSp ? 'Rellenar' : 'Fill Form'),
+                    label: Text(s.fillForm),
                   ),
                 ),
               ]),
@@ -251,6 +246,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
 
   Widget _resultsCard(CalcwiseTheme ct) {
     final p = _parsed!;
+    final s = _isSp ? const AppStringsEs() : const AppStringsEn();
     final rows = <Widget>[];
     void add(String key, String label, String value) {
       rows.add(CheckboxListTile(
@@ -269,40 +265,36 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
     }
 
     if (p.baseSalary != null) {
-      add('baseSalary', _isSp ? 'Salario base' : 'Base salary',
-          '\$${p.baseSalary!.toStringAsFixed(0)}/yr');
+      add('baseSalary', s.baseSalaryLabel, '\$${p.baseSalary!.toStringAsFixed(0)}/yr');
     }
     if (p.signOnBonus != null) {
-      add('signOnBonus', _isSp ? 'Bono de firma' : 'Sign-on bonus',
-          '\$${p.signOnBonus!.toStringAsFixed(0)}');
+      add('signOnBonus', s.signOnBonusLabel, '\$${p.signOnBonus!.toStringAsFixed(0)}');
     }
     if (p.annualBonus != null || p.annualBonusPct != null) {
       final pct = p.annualBonusPct;
       final amt = p.annualBonus;
       add(
         'annualBonus',
-        _isSp ? 'Bono anual' : 'Annual bonus',
+        s.annualBonusLabel,
         pct != null
             ? '${pct.toStringAsFixed(0)}%${amt != null ? ' (~\$${amt.toStringAsFixed(0)})' : ''}'
             : '\$${amt!.toStringAsFixed(0)}',
       );
     }
     if (p.equityValue != null) {
-      add('equityValue', _isSp ? 'Equity / RSU' : 'Equity / RSU',
-          '\$${p.equityValue!.toStringAsFixed(0)}');
+      add('equityValue', s.equityRsuLabel, '\$${p.equityValue!.toStringAsFixed(0)}');
     }
     if (p.matchPct != null) {
       add('matchPct', '401k match', '${p.matchPct!.toStringAsFixed(0)}%');
     }
     if (p.ptoDays != null) {
-      add('ptoDays', _isSp ? 'Días PTO' : 'PTO days',
-          '${p.ptoDays} ${_isSp ? "días" : "days"}');
+      add('ptoDays', s.ptoDaysLabel, '${p.ptoDays} ${s.daysLabel}');
     }
     if (p.title != null) {
-      add('title', _isSp ? 'Puesto' : 'Title', p.title!);
+      add('title', s.titleLabel, p.title!);
     }
     if (p.company != null) {
-      add('company', _isSp ? 'Empresa' : 'Company', p.company!);
+      add('company', s.companyLabel, p.company!);
     }
 
     return Container(
@@ -323,9 +315,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
                   color: ct.successGreen, size: 16),
               const SizedBox(width: AppSpacing.xs),
               Text(
-                _isSp
-                    ? '${p.fieldCount} campos detectados'
-                    : '${p.fieldCount} fields detected',
+                '${p.fieldCount} ${s.fieldsDetected}',
                 style: TextStyle(
                     fontSize: AppTextSize.sm,
                     fontWeight: FontWeight.w700,
