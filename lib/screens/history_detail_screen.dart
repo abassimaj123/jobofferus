@@ -667,20 +667,22 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
             title: Text(_isComparison ? s.savedComparison : s.offerDetail),
             leading: const BackButton(),
           ),
-          body: comp != null
-              ? _ComparisonBody(
-                  comp: comp,
-                  row: widget.row,
-                  isEs: isEs,
-                  exporting: _exporting,
-                  onExport: () => _exportPdf(isEs),
-                )
-              : _LegacyBody(
-                  row: widget.row,
-                  isEs: isEs,
-                  exporting: _exporting,
-                  onExport: () => _exportPdf(isEs),
-                ),
+          body: CalcwisePageEntrance(
+            child: comp != null
+                ? _ComparisonBody(
+                    comp: comp,
+                    row: widget.row,
+                    isEs: isEs,
+                    exporting: _exporting,
+                    onExport: () => _exportPdf(isEs),
+                  )
+                : _LegacyBody(
+                    row: widget.row,
+                    isEs: isEs,
+                    exporting: _exporting,
+                    onExport: () => _exportPdf(isEs),
+                  ),
+          ),
         );
       },
     );

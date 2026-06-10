@@ -232,7 +232,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ],
           ),
-          body: Column(
+          body: CalcwisePageEntrance(
+            child: Column(
             children: [
               Expanded(
                 child: _firstLoad
@@ -317,6 +318,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
               ),
             ],
+          ),
           ),
         );
       },
