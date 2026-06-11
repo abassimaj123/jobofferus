@@ -1226,6 +1226,12 @@ class _HeroKpiCard extends StatelessWidget {
           value: heroValue,
           secondary: heroSecondary,
           backgroundColor: bgColor,
+          rawValue: winnerResult.netTakeHome,
+          valueFormatter: (v) => AmountFormatter.ui(v, 'USD'),
+          rawStats: [
+            (label: statLabelA, value: winnerResult.effectiveTaxRate, formatter: (v) => '${v.toStringAsFixed(1)}%'),
+            (label: statLabelB, value: winnerResult.totalCompensation, formatter: (v) => AmountFormatter.ui(v, 'USD')),
+          ],
           stats: [
             (
               label: statLabelA,
@@ -1247,6 +1253,12 @@ class _HeroKpiCard extends StatelessWidget {
         value: heroValue,
         secondary: heroSecondary,
         backgroundColor: AppTheme.primary,
+        rawValue: a.totalCompensation,
+        valueFormatter: (v) => AmountFormatter.ui(v, 'USD'),
+        rawStats: [
+          (label: statLabelA, value: a.netTakeHome, formatter: (v) => AmountFormatter.ui(v, 'USD')),
+          (label: statLabelB, value: b.netTakeHome, formatter: (v) => AmountFormatter.ui(v, 'USD')),
+        ],
         stats: [
           (
             label: statLabelA,
