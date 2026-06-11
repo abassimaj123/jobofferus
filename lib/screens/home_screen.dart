@@ -291,7 +291,17 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           body: GestureDetector(
             onTap: () => FocusScope.of(context).unfocus(),
-            child: IndexedStack(index: _tabIndex, children: screens),
+            child: Stack(
+              fit: StackFit.expand,
+              children: List.generate(
+                screens.length,
+                (i) => IgnorePointer(
+                  ignoring: _tabIndex != i,
+                  child: CalcwiseTabReveal(
+                      active: _tabIndex == i, child: screens[i]),
+                ),
+              ),
+            ),
           ),
           floatingActionButton: _tabIndex == 0 ? _compareFab(isSp, s) : null,
           floatingActionButtonLocation:
