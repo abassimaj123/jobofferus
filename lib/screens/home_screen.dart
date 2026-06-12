@@ -242,7 +242,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.pop(context);
           AnalyticsService.instance.logPaywallConverted('hard_gate_offer_c');
           IAPService.instance.buy();
-          _compare();
+          // _compare() not called here — premium status updates asynchronously.
+          // After purchase completes, freemium notifier rebuilds UI and user re-taps Compare.
         },
         onDismiss: () {
           AnalyticsService.instance.logPaywallDismissed();
