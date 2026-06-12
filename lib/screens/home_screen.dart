@@ -12,6 +12,7 @@ import '../core/models/comparison_result.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/offer_form_card.dart';
 import '../widgets/paywall_hard.dart';
+import '../widgets/paywall_soft.dart';
 import '../main.dart'
     show paywallSession, isSpanishNotifier, smartHistoryService;
 import '../widgets/save_scenario_button.dart';
@@ -187,6 +188,17 @@ class _HomeScreenState extends State<HomeScreen> {
       _showPaywall();
       return;
     }
+    final trigger = await paywallSession.recordAction();
+    if (!mounted) return;
+    if (trigger == PaywallTrigger.soft) {
+      PaywallSoft.show(context);
+      return;
+    }
+    if (trigger == PaywallTrigger.hard) {
+      await PaywallHard.show(context);
+      return;
+    }
+    AnalyticsService.instance.maybeLogFirstCalculate();
     AnalyticsService.instance.logCalculationCompleted(params: {
       'salary_a': _offerA.baseSalary.round(),
       'salary_b': _offerB.baseSalary.round(),

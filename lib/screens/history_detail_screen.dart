@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:calcwise_core/calcwise_core.dart';
@@ -13,6 +15,604 @@ import '../core/freemium/freemium_service.dart';
 import '../core/services/analytics_service.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
+
+// ── PDF Isolate support ───────────────────────────────────────────────────────
+
+class _HistoryCompPdfParams {
+  final Map<String, dynamic> comp;
+  final bool isEs;
+  final String now;
+
+  const _HistoryCompPdfParams({
+    required this.comp,
+    required this.isEs,
+    required this.now,
+  });
+}
+
+Future<Uint8List> _buildHistoryComparisonPdf(
+    _HistoryCompPdfParams p) async {
+  final comp = p.comp;
+  final isEs = p.isEs;
+
+  final pctFmt = NumberFormat('0.0#', 'en_US');
+  final numFmt = NumberFormat('#,##0', 'en_US');
+
+  final offers = (comp['offers'] as List).cast<Map<String, dynamic>>();
+  final winner = comp['winner'] as String? ?? 'tie';
+  final advantage = (comp['advantage'] as num?)?.toDouble() ?? 0;
+  final categories = (comp['categories'] as Map<String, dynamic>? ?? {});
+
+  final primary = PdfColor.fromHex('4F46E5');
+  final accent = PdfColor.fromHex('F59E0B');
+  final green = PdfColor.fromHex('16A34A');
+  final grey = PdfColors.grey700;
+  final lightGrey = PdfColors.grey200;
+
+  String winLabel() {
+    if (winner == 'tie') return isEs ? 'Empate' : 'Tie';
+    final idx = winner == 'A' ? 0 : winner == 'B' ? 1 : 2;
+    final lbl = offers[idx]['label'] as String? ?? 'Offer $winner';
+    return isEs ? '$lbl gana' : '$lbl wins';
+  }
+
+  pw.Widget headerCell(String t, {bool right = false}) => pw.Padding(
+        padding: const pw.EdgeInsets.all(6),
+        child: pw.Text(t,
+            textAlign: right ? pw.TextAlign.right : pw.TextAlign.left,
+            style: pw.TextStyle(
+                fontSize: 9,
+                color: PdfColors.white,
+                fontWeight: pw.FontWeight.bold)),
+      );
+
+  pw.Widget labelCell(String t) => pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        child: pw.Text(t, style: pw.TextStyle(fontSize: 9, color: grey)),
+      );
+
+  pw.Widget valCell(String t, {bool bold = false, bool isWinner = false}) =>
+      pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        child: pw.Text(t,
+            textAlign: pw.TextAlign.right,
+            style: pw.TextStyle(
+                fontSize: 9,
+                color: isWinner ? green : PdfColors.black,
+                fontWeight: bold || isWinner
+                    ? pw.FontWeight.bold
+                    : pw.FontWeight.normal)),
+      );
+
+  final numOffers = offers.length;
+  final colWidths = <int, pw.TableColumnWidth>{
+    0: const pw.FlexColumnWidth(2.8),
+    for (var i = 0; i < numOffers; i++)
+      i + 1: const pw.FlexColumnWidth(1.6),
+  };
+
+  int _winnerIdx(String w) {
+    switch (w) {
+      case 'offerA':
+      case 'A':
+        return 0;
+      case 'offerB':
+      case 'B':
+        return 1;
+      case 'offerC':
+      case 'C':
+        return 2;
+      default:
+        return -1;
+    }
+  }
+
+  pw.TableRow dataRow(String label, List<String> vals,
+      {bool bold = false, String? winnerIdx}) {
+    return pw.TableRow(
+      decoration: pw.BoxDecoration(color: lightGrey),
+      children: [
+        labelCell(label),
+        for (var i = 0; i < vals.length; i++)
+          valCell(vals[i],
+              bold: bold,
+              isWinner: winnerIdx != null && _winnerIdx(winnerIdx) == i),
+      ],
+    );
+  }
+
+  pw.TableRow sectionHeader(String title) => pw.TableRow(
+        decoration:
+            pw.BoxDecoration(color: PdfColor.fromHex('EEF2FF')),
+        children: [
+          pw.Padding(
+            padding:
+                const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: pw.Text(title,
+                style: pw.TextStyle(
+                    fontSize: 9,
+                    fontWeight: pw.FontWeight.bold,
+                    color: primary)),
+          ),
+          for (var _ in offers) pw.SizedBox(),
+        ],
+      );
+
+  String amt(dynamic v) =>
+      AmountFormatter.ui((v as num?)?.toDouble() ?? 0, 'USD');
+  String pct(dynamic v) =>
+      '${pctFmt.format((v as num?)?.toDouble() ?? 0)}%';
+
+  String _letter(int i) => ['A', 'B', 'C'][i.clamp(0, 2)];
+
+  PdfColor _offerColor(int i) {
+    const colors = ['4F46E5', '0891B2', 'D97706'];
+    return PdfColor.fromHex(colors[i.clamp(0, 2)]);
+  }
+
+  String _categoryLabel(String key, bool isEs) {
+    const en = {
+      'takeHome': 'Take-Home',
+      'bonus': 'Bonus',
+      'benefits': 'Benefits',
+      'pto': 'PTO',
+      'rsu': 'RSU/Equity',
+      'commute': 'Commute',
+      'col': 'Cost of Living',
+      'total': 'Total Comp',
+    };
+    const es = {
+      'takeHome': 'Neto',
+      'bonus': 'Bono',
+      'benefits': 'Beneficios',
+      'pto': 'PTO',
+      'rsu': 'RSU/Equidad',
+      'commute': 'Traslado',
+      'col': 'Costo de vida',
+      'total': 'Comp. total',
+    };
+    return (isEs ? es : en)[key] ?? key;
+  }
+
+  final pdf = pw.Document();
+
+  pdf.addPage(pw.MultiPage(
+    pageFormat: PdfPageFormat.a4,
+    margin: const pw.EdgeInsets.all(32),
+    build: (ctx) => [
+      pw.Text(
+          isEs
+              ? 'Comparación Detallada de Ofertas de Trabajo'
+              : 'Detailed Job Offer Comparison Report',
+          style: pw.TextStyle(
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+              color: primary)),
+      pw.SizedBox(height: 4),
+      pw.Text(
+          '${isEs ? 'Generado' : 'Generated'}: ${p.now}  ·  Job Offer US',
+          style: pw.TextStyle(fontSize: 8, color: grey)),
+      pw.SizedBox(height: 14),
+      pw.Container(
+        padding:
+            const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: pw.BoxDecoration(
+            gradient: pw.LinearGradient(
+                colors: [primary, PdfColor.fromHex('7C3AED')]),
+            borderRadius: pw.BorderRadius.circular(8)),
+        child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text('★ ${winLabel()}',
+                  style: pw.TextStyle(
+                      fontSize: 13,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white)),
+              if (winner != 'tie')
+                pw.Text(
+                    '+${AmountFormatter.ui(advantage, 'USD')} ${isEs ? "ventaja/año" : "advantage/yr"}',
+                    style: pw.TextStyle(
+                        fontSize: 10, color: PdfColors.white)),
+            ]),
+      ),
+      pw.SizedBox(height: 16),
+      pw.Row(children: [
+        for (var i = 0; i < offers.length; i++) ...[
+          if (i > 0) pw.SizedBox(width: 8),
+          pw.Expanded(
+            child: pw.Container(
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: _offerColor(i),
+                borderRadius: pw.BorderRadius.circular(6),
+              ),
+              child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                        offers[i]['label'] as String? ??
+                            'Offer ${_letter(i)}',
+                        style: pw.TextStyle(
+                            fontSize: 11,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.white)),
+                    if ((offers[i]['company'] as String? ?? '')
+                        .isNotEmpty)
+                      pw.Text(offers[i]['company'] as String,
+                          style: pw.TextStyle(
+                              fontSize: 9, color: PdfColors.white)),
+                    if ((offers[i]['city'] as String? ?? '').isNotEmpty)
+                      pw.Text(
+                          '${offers[i]['city']} · ${offers[i]['state'] ?? ''}',
+                          style: pw.TextStyle(
+                              fontSize: 8, color: PdfColors.white)),
+                    pw.SizedBox(height: 6),
+                    pw.Text(
+                        amt(offers[i]['net']),
+                        style: pw.TextStyle(
+                            fontSize: 14,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.white)),
+                    pw.Text(isEs ? 'neto/año' : 'net/yr',
+                        style: pw.TextStyle(
+                            fontSize: 8, color: PdfColors.white)),
+                  ]),
+            ),
+          ),
+        ],
+      ]),
+      pw.SizedBox(height: 16),
+      pw.Table(
+        border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
+        columnWidths: colWidths,
+        children: [
+          pw.TableRow(
+            decoration: pw.BoxDecoration(color: primary),
+            children: [
+              headerCell(isEs ? 'Métrica' : 'Metric'),
+              for (var o in offers)
+                headerCell(o['label'] as String? ?? 'Offer', right: true),
+            ],
+          ),
+          sectionHeader(isEs ? 'INGRESOS' : 'INCOME'),
+          dataRow(isEs ? 'Salario bruto' : 'Gross Salary',
+              [for (var o in offers) amt(o['base'])],
+              bold: true),
+          dataRow(isEs ? 'Neto anual' : 'Annual Net Take-Home',
+              [for (var o in offers) amt(o['net'])],
+              bold: true, winnerIdx: winner),
+          dataRow(isEs ? 'Neto mensual' : 'Monthly Net',
+              [for (var o in offers) amt(o['monthly'])]),
+          dataRow(isEs ? 'Comp. total neta' : 'Total Net Compensation',
+              [for (var o in offers) amt(o['total_comp'])],
+              bold: true,
+              winnerIdx: categories['total'] as String?),
+          sectionHeader(isEs ? 'IMPUESTOS' : 'TAXES'),
+          dataRow(isEs ? 'Tasa efectiva' : 'Effective Tax Rate',
+              [for (var o in offers) pct(o['tax_rate'])]),
+          dataRow(isEs ? 'Impuesto federal' : 'Federal Tax',
+              [for (var o in offers) amt(o['federal'])]),
+          dataRow(isEs ? 'Impuesto estatal' : 'State Tax',
+              [for (var o in offers) amt(o['state_tax'])]),
+          dataRow('FICA (SS + Medicare)',
+              [for (var o in offers) amt(o['fica'])]),
+          dataRow(isEs ? 'Total impuestos' : 'Total Taxes',
+              [for (var o in offers) amt(o['total_tax'])]),
+          sectionHeader(isEs ? 'BONOS' : 'BONUSES'),
+          dataRow(
+              isEs ? 'Bono anual (bruto)' : 'Annual Bonus (gross)',
+              [for (var o in offers) amt(o['annual_bonus'])],
+              winnerIdx: categories['bonus'] as String?),
+          dataRow(
+              isEs
+                  ? 'Bono anual (neto)'
+                  : 'Annual Bonus (after tax)',
+              [for (var o in offers) amt(o['bonus_net'])]),
+          if (offers
+              .any((o) => ((o['signing'] as num?) ?? 0) > 0))
+            dataRow(
+                isEs
+                    ? 'Bono contratación (neto)'
+                    : 'Signing Bonus (after tax)',
+                [for (var o in offers) amt(o['signing_net'])]),
+          sectionHeader(isEs ? 'BENEFICIOS' : 'BENEFITS'),
+          dataRow(isEs ? 'Match 401k' : '401k Employer Match',
+              [for (var o in offers) amt(o['k401k_match_usd'])]),
+          dataRow(
+              isEs
+                  ? 'Beneficios salud/dental'
+                  : 'Health & Dental Savings',
+              [for (var o in offers) amt(o['health'])],
+              winnerIdx: categories['benefits'] as String?),
+          dataRow(isEs ? 'RSU anual' : 'Annual RSU / Equity',
+              [for (var o in offers) amt(o['rsu_value'])],
+              winnerIdx: categories['rsu'] as String?),
+          dataRow(isEs ? 'Valor PTO' : 'PTO Value',
+              [for (var o in offers) amt(o['pto_value'])],
+              winnerIdx: categories['pto'] as String?),
+          if (offers.any(
+              (o) => ((o['commute_miles'] as num?) ?? 0) > 0))
+            dataRow(
+                isEs
+                    ? 'Costo traslado anual'
+                    : 'Annual Commute Cost',
+                [for (var o in offers) amt(o['commute_cost'])]),
+          sectionHeader(
+              isEs ? 'PODER ADQUISITIVO' : 'PURCHASING POWER'),
+          dataRow(
+              isEs
+                  ? 'Neto ajustado (costo de vida)'
+                  : 'CoL-Adjusted Net Take-Home',
+              [for (var o in offers) amt(o['col_adj'])],
+              bold: true,
+              winnerIdx: categories['col'] as String?),
+        ],
+      ),
+      pw.SizedBox(height: 16),
+      if (categories.isNotEmpty) ...[
+        pw.Text(
+            isEs
+                ? 'GANADORES POR CATEGORÍA'
+                : 'CATEGORY WINNERS',
+            style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: primary)),
+        pw.SizedBox(height: 6),
+        pw.Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: categories.entries.map((e) {
+            final idx = _winnerIdx(e.value as String);
+            final label = idx >= 0 && idx < offers.length
+                ? offers[idx]['label'] as String? ??
+                    'Offer ${e.value}'
+                : isEs
+                    ? 'Empate'
+                    : 'Tie';
+            return pw.Container(
+              padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
+              decoration: pw.BoxDecoration(
+                  color: PdfColor.fromHex('EEF2FF'),
+                  borderRadius: pw.BorderRadius.circular(4)),
+              child: pw.Text(
+                  '${_categoryLabel(e.key, isEs)}: $label',
+                  style:
+                      pw.TextStyle(fontSize: 8, color: primary)),
+            );
+          }).toList(),
+        ),
+        pw.SizedBox(height: 16),
+      ],
+      if (offers.isNotEmpty &&
+          offers[0]['5yr'] != null &&
+          (offers[0]['5yr'] as List).isNotEmpty) ...[
+        pw.Text(
+            isEs
+                ? 'PROYECCIÓN A 5 AÑOS'
+                : '5-YEAR COMPENSATION PROJECTION',
+            style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: primary)),
+        pw.SizedBox(height: 6),
+        pw.Table(
+          border:
+              pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
+          columnWidths: {
+            0: const pw.FlexColumnWidth(1),
+            for (var i = 0; i < offers.length; i++)
+              i + 1: const pw.FlexColumnWidth(1.8),
+          },
+          children: [
+            pw.TableRow(
+              decoration: pw.BoxDecoration(color: primary),
+              children: [
+                headerCell(isEs ? 'Año' : 'Year'),
+                for (var o in offers)
+                  headerCell(o['label'] as String? ?? 'Offer',
+                      right: true),
+              ],
+            ),
+            for (var yr = 0; yr < 5; yr++)
+              pw.TableRow(
+                decoration: pw.BoxDecoration(
+                    color: yr.isOdd ? lightGrey : PdfColors.white),
+                children: [
+                  pw.Padding(
+                      padding: const pw.EdgeInsets.all(5),
+                      child: pw.Text(
+                          '${isEs ? "Año" : "Year"} ${yr + 1}',
+                          style: pw.TextStyle(
+                              fontSize: 9, color: grey))),
+                  for (var o in offers)
+                    pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text(
+                            amt((o['5yr'] as List?)
+                                    ?.elementAtOrNull(yr) ??
+                                0),
+                            textAlign: pw.TextAlign.right,
+                            style: pw.TextStyle(
+                                fontSize: 9,
+                                fontWeight:
+                                    pw.FontWeight.bold))),
+                ],
+              ),
+          ],
+        ),
+        pw.SizedBox(height: 16),
+      ],
+      pw.Container(
+        padding: const pw.EdgeInsets.all(8),
+        decoration: pw.BoxDecoration(
+            color: PdfColors.grey100,
+            borderRadius: pw.BorderRadius.circular(4)),
+        child: pw.Text(
+          isEs
+              ? 'Este reporte es solo informativo. Los cálculos son estimaciones basadas en tarifas federales y estatales de 2025. Consulte a un asesor fiscal certificado antes de tomar decisiones financieras.'
+              : 'This report is for informational purposes only. Calculations are estimates based on 2025 federal and state tax rates. Consult a certified tax professional before making financial decisions.',
+          style: pw.TextStyle(
+              fontSize: 7,
+              color: grey,
+              fontStyle: pw.FontStyle.italic),
+        ),
+      ),
+    ],
+  ));
+
+  return pdf.save();
+}
+
+class _HistorySinglePdfParams {
+  final bool isEs;
+  final String now;
+  final String jobTitle;
+  final String company;
+  final double salary;
+  final double bonus;
+  final double netSalary;
+  final double monthlyNet;
+  final double taxRate;
+
+  const _HistorySinglePdfParams({
+    required this.isEs,
+    required this.now,
+    required this.jobTitle,
+    required this.company,
+    required this.salary,
+    required this.bonus,
+    required this.netSalary,
+    required this.monthlyNet,
+    required this.taxRate,
+  });
+}
+
+Future<Uint8List> _buildHistorySinglePdf(
+    _HistorySinglePdfParams p) async {
+  final pctFmt = NumberFormat('0.0#', 'en_US');
+  final primary = PdfColor.fromHex('4F46E5');
+  final grey = PdfColors.grey700;
+
+  pw.TableRow pdfRow(String label, String value, {bool bold = false}) =>
+      pw.TableRow(children: [
+        pw.Padding(
+            padding: const pw.EdgeInsets.all(6),
+            child: pw.Text(label,
+                style: pw.TextStyle(fontSize: 10, color: grey))),
+        pw.Padding(
+            padding: const pw.EdgeInsets.all(6),
+            child: pw.Text(value,
+                textAlign: pw.TextAlign.right,
+                style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: bold
+                        ? pw.FontWeight.bold
+                        : pw.FontWeight.normal))),
+      ]);
+
+  final pdf = pw.Document();
+  pdf.addPage(pw.Page(
+    pageFormat: PdfPageFormat.a4,
+    margin: const pw.EdgeInsets.all(32),
+    build: (_) => pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+            p.isEs
+                ? 'Detalle de Oferta de Trabajo'
+                : 'Job Offer Detail',
+            style: pw.TextStyle(
+                fontSize: 20,
+                fontWeight: pw.FontWeight.bold,
+                color: primary)),
+        pw.SizedBox(height: 4),
+        pw.Text(
+            '${p.isEs ? 'Generado' : 'Generated'}: ${p.now}',
+            style: pw.TextStyle(fontSize: 9, color: grey)),
+        pw.SizedBox(height: 16),
+        if (p.jobTitle.isNotEmpty || p.company.isNotEmpty)
+          pw.Container(
+            padding:
+                const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: pw.BoxDecoration(
+                color: PdfColor.fromHex('EEF2FF'),
+                borderRadius: pw.BorderRadius.circular(6)),
+            child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  if (p.jobTitle.isNotEmpty)
+                    pw.Text(p.jobTitle,
+                        style: pw.TextStyle(
+                            fontSize: 14,
+                            fontWeight: pw.FontWeight.bold,
+                            color: primary)),
+                  if (p.company.isNotEmpty)
+                    pw.Text(p.company,
+                        style: pw.TextStyle(fontSize: 11, color: grey)),
+                ]),
+          ),
+        pw.SizedBox(height: 16),
+        pw.Table(
+          border:
+              pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+          columnWidths: {
+            0: const pw.FlexColumnWidth(2.5),
+            1: const pw.FlexColumnWidth(1.5),
+          },
+          children: [
+            pw.TableRow(
+              decoration: pw.BoxDecoration(color: primary),
+              children: [
+                pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(p.isEs ? 'Métrica' : 'Metric',
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.white,
+                            fontWeight: pw.FontWeight.bold))),
+                pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(p.isEs ? 'Valor' : 'Value',
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.white,
+                            fontWeight: pw.FontWeight.bold))),
+              ],
+            ),
+            pdfRow(p.isEs ? 'Salario bruto' : 'Gross Salary',
+                AmountFormatter.ui(p.salary, 'USD'),
+                bold: true),
+            pdfRow(p.isEs ? 'Neto anual' : 'Annual Net Take-Home',
+                AmountFormatter.ui(p.netSalary, 'USD'),
+                bold: true),
+            pdfRow(p.isEs ? 'Neto mensual' : 'Monthly Net',
+                AmountFormatter.ui(p.monthlyNet, 'USD')),
+            if (p.bonus > 0)
+              pdfRow(p.isEs ? 'Bono' : 'Bonus',
+                  AmountFormatter.ui(p.bonus, 'USD')),
+            pdfRow(p.isEs ? 'Tasa impositiva' : 'Effective Tax Rate',
+                '${pctFmt.format(p.taxRate)}%'),
+          ],
+        ),
+        pw.SizedBox(height: 20),
+        pw.Text(
+          p.isEs
+              ? 'Este reporte es solo informativo. Consulte a un asesor fiscal.'
+              : 'This report is for informational purposes only. Consult a tax professional.',
+          style: pw.TextStyle(
+              fontSize: 8, color: grey, fontStyle: pw.FontStyle.italic),
+        ),
+      ],
+    ),
+  ));
+
+  return pdf.save();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 /// Full detail view for a saved comparison or single offer entry.
 class HistoryDetailScreen extends StatefulWidget {
@@ -76,390 +676,13 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   // ── Full comparison PDF (premium quality) ───────────────────────────────────
   Future<void> _exportComparisonPdf(
       Map<String, dynamic> comp, bool isEs) async {
-    final pctFmt = NumberFormat('0.0#', 'en_US');
-    final numFmt = NumberFormat('#,##0', 'en_US');
-    final dateFmt = DateFormat('MMM d, yyyy');
-    final now = dateFmt.format(DateTime.now());
-
-    final offers = (comp['offers'] as List).cast<Map<String, dynamic>>();
-    final winner = comp['winner'] as String? ?? 'tie';
-    final advantage = (comp['advantage'] as num?)?.toDouble() ?? 0;
-    final categories =
-        (comp['categories'] as Map<String, dynamic>? ?? {});
-
-    final primary = PdfColor.fromHex('4F46E5');
-    final accent = PdfColor.fromHex('F59E0B');
-    final green = PdfColor.fromHex('16A34A');
-    final grey = PdfColors.grey700;
-    final lightGrey = PdfColors.grey200;
-
-    String winLabel() {
-      if (winner == 'tie') return isEs ? 'Empate' : 'Tie';
-      final idx = winner == 'A' ? 0 : winner == 'B' ? 1 : 2;
-      final lbl = offers[idx]['label'] as String? ?? 'Offer $winner';
-      return isEs ? '$lbl gana' : '$lbl wins';
-    }
-
-    pw.Widget headerCell(String t, {bool right = false}) => pw.Padding(
-          padding: const pw.EdgeInsets.all(6),
-          child: pw.Text(t,
-              textAlign: right ? pw.TextAlign.right : pw.TextAlign.left,
-              style: pw.TextStyle(
-                  fontSize: 9,
-                  color: PdfColors.white,
-                  fontWeight: pw.FontWeight.bold)),
-        );
-
-    pw.Widget labelCell(String t) => pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-          child: pw.Text(t,
-              style: pw.TextStyle(fontSize: 9, color: grey)),
-        );
-
-    pw.Widget valCell(String t,
-            {bool bold = false, bool winner = false}) =>
-        pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-          child: pw.Text(t,
-              textAlign: pw.TextAlign.right,
-              style: pw.TextStyle(
-                  fontSize: 9,
-                  color: winner ? green : PdfColors.black,
-                  fontWeight:
-                      bold || winner ? pw.FontWeight.bold : pw.FontWeight.normal)),
-        );
-
-    // Build column widths dynamically
-    final numOffers = offers.length;
-    final colWidths = <int, pw.TableColumnWidth>{
-      0: const pw.FlexColumnWidth(2.8),
-      for (var i = 0; i < numOffers; i++)
-        i + 1: const pw.FlexColumnWidth(1.6),
-    };
-
-    pw.TableRow dataRow(String label, List<String> vals,
-        {bool bold = false, String? winnerIdx}) {
-      return pw.TableRow(
-        decoration: pw.BoxDecoration(color: lightGrey),
-        children: [
-          labelCell(label),
-          for (var i = 0; i < vals.length; i++)
-            valCell(vals[i],
-                bold: bold,
-                winner: winnerIdx != null &&
-                    _winnerLetterToIndex(winnerIdx) == i),
-        ],
-      );
-    }
-
-    pw.TableRow sectionHeader(String title) => pw.TableRow(
-          decoration: pw.BoxDecoration(
-              color: PdfColor.fromHex('EEF2FF')),
-          children: [
-            pw.Padding(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              child: pw.Text(title,
-                  style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                      color: primary)),
-            ),
-            for (var _ in offers) pw.SizedBox(),
-          ],
-        );
-
-    String amt(dynamic v) =>
-        AmountFormatter.ui((v as num?)?.toDouble() ?? 0, 'USD');
-    String pct(dynamic v) => '${pctFmt.format((v as num?)?.toDouble() ?? 0)}%';
-    String yrs(dynamic v) => '${numFmt.format((v as num?)?.toDouble() ?? 0)} yrs';
-
-    final pdf = pw.Document();
-
-    pdf.addPage(pw.MultiPage(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(32),
-      build: (ctx) => [
-        // ── Title ──
-        pw.Text(
-            isEs
-                ? 'Comparación Detallada de Ofertas de Trabajo'
-                : 'Detailed Job Offer Comparison Report',
-            style: pw.TextStyle(
-                fontSize: 18,
-                fontWeight: pw.FontWeight.bold,
-                color: primary)),
-        pw.SizedBox(height: 4),
-        pw.Text(
-            '${isEs ? 'Generado' : 'Generated'}: $now  ·  Job Offer US',
-            style: pw.TextStyle(fontSize: 8, color: grey)),
-        pw.SizedBox(height: 14),
-
-        // ── Winner banner ──
-        pw.Container(
-          padding:
-              const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: pw.BoxDecoration(
-              gradient: pw.LinearGradient(
-                  colors: [primary, PdfColor.fromHex('7C3AED')]),
-              borderRadius: pw.BorderRadius.circular(8)),
-          child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('★ ${winLabel()}',
-                    style: pw.TextStyle(
-                        fontSize: 13,
-                        fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.white)),
-                if (winner != 'tie')
-                  pw.Text(
-                      '+${AmountFormatter.ui(advantage, 'USD')} ${isEs ? "ventaja/año" : "advantage/yr"}',
-                      style: pw.TextStyle(
-                          fontSize: 10, color: PdfColors.white)),
-              ]),
-        ),
-        pw.SizedBox(height: 16),
-
-        // ── Offer summaries header ──
-        pw.Row(children: [
-          for (var i = 0; i < offers.length; i++) ...[
-            if (i > 0) pw.SizedBox(width: 8),
-            pw.Expanded(
-              child: pw.Container(
-                padding: const pw.EdgeInsets.all(10),
-                decoration: pw.BoxDecoration(
-                  color: _offerColor(i),
-                  borderRadius: pw.BorderRadius.circular(6),
-                ),
-                child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                          offers[i]['label'] as String? ?? 'Offer ${_letter(i)}',
-                          style: pw.TextStyle(
-                              fontSize: 11,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white)),
-                      if ((offers[i]['company'] as String? ?? '').isNotEmpty)
-                        pw.Text(offers[i]['company'] as String,
-                            style: pw.TextStyle(
-                                fontSize: 9,
-                                color: PdfColors.white)),
-                      if ((offers[i]['city'] as String? ?? '').isNotEmpty)
-                        pw.Text(
-                            '${offers[i]['city']} · ${offers[i]['state'] ?? ''}',
-                            style: pw.TextStyle(
-                                fontSize: 8,
-                                color: PdfColors.white)),
-                      pw.SizedBox(height: 6),
-                      pw.Text(
-                          amt(offers[i]['net']),
-                          style: pw.TextStyle(
-                              fontSize: 14,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white)),
-                      pw.Text(isEs ? 'neto/año' : 'net/yr',
-                          style: pw.TextStyle(
-                              fontSize: 8,
-                              color: PdfColors.white)),
-                    ]),
-              ),
-            ),
-          ],
-        ]),
-        pw.SizedBox(height: 16),
-
-        // ── Main comparison table ──
-        pw.Table(
-          border:
-              pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
-          columnWidths: colWidths,
-          children: [
-            // Header
-            pw.TableRow(
-              decoration: pw.BoxDecoration(color: primary),
-              children: [
-                headerCell(isEs ? 'Métrica' : 'Metric'),
-                for (var o in offers)
-                  headerCell(o['label'] as String? ?? 'Offer',
-                      right: true),
-              ],
-            ),
-
-            // ── Income ──
-            sectionHeader(isEs ? 'INGRESOS' : 'INCOME'),
-            dataRow(isEs ? 'Salario bruto' : 'Gross Salary',
-                [for (var o in offers) amt(o['base'])],
-                bold: true),
-            dataRow(isEs ? 'Neto anual' : 'Annual Net Take-Home',
-                [for (var o in offers) amt(o['net'])],
-                bold: true, winnerIdx: winner),
-            dataRow(isEs ? 'Neto mensual' : 'Monthly Net',
-                [for (var o in offers) amt(o['monthly'])]),
-            dataRow(isEs ? 'Comp. total neta' : 'Total Net Compensation',
-                [for (var o in offers) amt(o['total_comp'])],
-                bold: true, winnerIdx: categories['total'] as String?),
-
-            // ── Taxes ──
-            sectionHeader(isEs ? 'IMPUESTOS' : 'TAXES'),
-            dataRow(isEs ? 'Tasa efectiva' : 'Effective Tax Rate',
-                [for (var o in offers) pct(o['tax_rate'])]),
-            dataRow(isEs ? 'Impuesto federal' : 'Federal Tax',
-                [for (var o in offers) amt(o['federal'])]),
-            dataRow(isEs ? 'Impuesto estatal' : 'State Tax',
-                [for (var o in offers) amt(o['state_tax'])]),
-            dataRow('FICA (SS + Medicare)',
-                [for (var o in offers) amt(o['fica'])]),
-            dataRow(isEs ? 'Total impuestos' : 'Total Taxes',
-                [for (var o in offers) amt(o['total_tax'])]),
-
-            // ── Bonuses ──
-            sectionHeader(isEs ? 'BONOS' : 'BONUSES'),
-            dataRow(isEs ? 'Bono anual (bruto)' : 'Annual Bonus (gross)',
-                [for (var o in offers) amt(o['annual_bonus'])],
-                winnerIdx: categories['bonus'] as String?),
-            dataRow(isEs ? 'Bono anual (neto)' : 'Annual Bonus (after tax)',
-                [for (var o in offers) amt(o['bonus_net'])]),
-            if (offers.any((o) => ((o['signing'] as num?) ?? 0) > 0))
-              dataRow(isEs ? 'Bono contratación (neto)' : 'Signing Bonus (after tax)',
-                  [for (var o in offers) amt(o['signing_net'])]),
-
-            // ── Benefits ──
-            sectionHeader(isEs ? 'BENEFICIOS' : 'BENEFITS'),
-            dataRow(isEs ? 'Match 401k' : '401k Employer Match',
-                [for (var o in offers) amt(o['k401k_match_usd'])]),
-            dataRow(isEs ? 'Beneficios salud/dental' : 'Health & Dental Savings',
-                [for (var o in offers) amt(o['health'])],
-                winnerIdx: categories['benefits'] as String?),
-            dataRow(isEs ? 'RSU anual' : 'Annual RSU / Equity',
-                [for (var o in offers) amt(o['rsu_value'])],
-                winnerIdx: categories['rsu'] as String?),
-            dataRow(isEs ? 'Valor PTO' : 'PTO Value',
-                [for (var o in offers) amt(o['pto_value'])],
-                winnerIdx: categories['pto'] as String?),
-            if (offers.any((o) => ((o['commute_miles'] as num?) ?? 0) > 0))
-              dataRow(isEs ? 'Costo traslado anual' : 'Annual Commute Cost',
-                  [for (var o in offers) amt(o['commute_cost'])]),
-
-            // ── Cost of living adjusted ──
-            sectionHeader(isEs ? 'PODER ADQUISITIVO' : 'PURCHASING POWER'),
-            dataRow(
-                isEs
-                    ? 'Neto ajustado (costo de vida)'
-                    : 'CoL-Adjusted Net Take-Home',
-                [for (var o in offers) amt(o['col_adj'])],
-                bold: true, winnerIdx: categories['col'] as String?),
-          ],
-        ),
-        pw.SizedBox(height: 16),
-
-        // ── Category winners ──
-        if (categories.isNotEmpty) ...[
-          pw.Text(isEs ? 'GANADORES POR CATEGORÍA' : 'CATEGORY WINNERS',
-              style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: primary)),
-          pw.SizedBox(height: 6),
-          pw.Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: categories.entries.map((e) {
-              final idx = _winnerLetterToIndex(e.value as String);
-              final label = idx >= 0 && idx < offers.length
-                  ? offers[idx]['label'] as String? ?? 'Offer ${e.value}'
-                  : isEs ? 'Empate' : 'Tie';
-              return pw.Container(
-                padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
-                decoration: pw.BoxDecoration(
-                    color: PdfColor.fromHex('EEF2FF'),
-                    borderRadius: pw.BorderRadius.circular(4)),
-                child: pw.Text(
-                    '${_categoryLabel(e.key, isEs)}: $label',
-                    style: pw.TextStyle(fontSize: 8, color: primary)),
-              );
-            }).toList(),
-          ),
-          pw.SizedBox(height: 16),
-        ],
-
-        // ── 5-year projection ──
-        if (offers.isNotEmpty &&
-            offers[0]['5yr'] != null &&
-            (offers[0]['5yr'] as List).isNotEmpty) ...[
-          pw.Text(isEs ? 'PROYECCIÓN A 5 AÑOS' : '5-YEAR COMPENSATION PROJECTION',
-              style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: primary)),
-          pw.SizedBox(height: 6),
-          pw.Table(
-            border:
-                pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(1),
-              for (var i = 0; i < offers.length; i++)
-                i + 1: const pw.FlexColumnWidth(1.8),
-            },
-            children: [
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: primary),
-                children: [
-                  headerCell(isEs ? 'Año' : 'Year'),
-                  for (var o in offers)
-                    headerCell(o['label'] as String? ?? 'Offer',
-                        right: true),
-                ],
-              ),
-              for (var yr = 0; yr < 5; yr++)
-                pw.TableRow(
-                  decoration: pw.BoxDecoration(
-                      color: yr.isOdd ? lightGrey : PdfColors.white),
-                  children: [
-                    pw.Padding(
-                        padding: const pw.EdgeInsets.all(5),
-                        child: pw.Text('${isEs ? "Año" : "Year"} ${yr + 1}',
-                            style:
-                                pw.TextStyle(fontSize: 9, color: grey))),
-                    for (var o in offers)
-                      pw.Padding(
-                          padding: const pw.EdgeInsets.all(5),
-                          child: pw.Text(
-                              amt((o['5yr'] as List?)
-                                      ?.elementAtOrNull(yr) ??
-                                  0),
-                              textAlign: pw.TextAlign.right,
-                              style: pw.TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: pw.FontWeight.bold))),
-                  ],
-                ),
-            ],
-          ),
-          pw.SizedBox(height: 16),
-        ],
-
-        // ── Disclaimer ──
-        pw.Container(
-          padding: const pw.EdgeInsets.all(8),
-          decoration: pw.BoxDecoration(
-              color: PdfColors.grey100,
-              borderRadius: pw.BorderRadius.circular(4)),
-          child: pw.Text(
-            isEs
-                ? 'Este reporte es solo informativo. Los cálculos son estimaciones basadas en tarifas federales y estatales de 2025. Consulte a un asesor fiscal certificado antes de tomar decisiones financieras.'
-                : 'This report is for informational purposes only. Calculations are estimates based on 2025 federal and state tax rates. Consult a certified tax professional before making financial decisions.',
-            style: pw.TextStyle(
-                fontSize: 7,
-                color: grey,
-                fontStyle: pw.FontStyle.italic),
-          ),
-        ),
-      ],
-    ));
-
-    final pdfBytes = await pdf.save();
+    final params = _HistoryCompPdfParams(
+      comp: comp,
+      isEs: isEs,
+      now: DateFormat('MMM d, yyyy').format(DateTime.now()),
+    );
+    final pdfBytes =
+        await Isolate.run(() => _buildHistoryComparisonPdf(params));
     final tmpDir = await getTemporaryDirectory();
     final pdfFile = File(
         '${tmpDir.path}/job_comparison_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf');
@@ -470,131 +693,21 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
 
   // ── Single offer PDF (legacy rows) ──────────────────────────────────────────
   Future<void> _exportSinglePdf(bool isEs) async {
-    final pctFmt = NumberFormat('0.0#', 'en_US');
     final row = widget.row;
     final jobTitle = row['job_title'] as String? ?? '';
-    final company = row['company'] as String? ?? '';
-    final salary = (row['salary'] as num?)?.toDouble() ?? 0.0;
-    final bonus = (row['bonus'] as num?)?.toDouble() ?? 0.0;
-    final netSalary = (row['net_salary'] as num?)?.toDouble() ?? 0.0;
-    final monthlyNet = (row['monthly_net'] as num?)?.toDouble() ?? 0.0;
-    final taxRate = (row['tax_rate'] as num?)?.toDouble() ?? 0.0;
-
-    final primary = PdfColor.fromHex('4F46E5');
-    final grey = PdfColors.grey700;
-
-    pw.TableRow pdfRow(String label, String value, {bool bold = false}) =>
-        pw.TableRow(children: [
-          pw.Padding(
-              padding: const pw.EdgeInsets.all(6),
-              child: pw.Text(label,
-                  style: pw.TextStyle(fontSize: 10, color: grey))),
-          pw.Padding(
-              padding: const pw.EdgeInsets.all(6),
-              child: pw.Text(value,
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                      fontSize: 10,
-                      fontWeight: bold
-                          ? pw.FontWeight.bold
-                          : pw.FontWeight.normal))),
-        ]);
-
-    final pdf = pw.Document();
-    pdf.addPage(pw.Page(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(32),
-      build: (_) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(isEs ? 'Detalle de Oferta de Trabajo' : 'Job Offer Detail',
-              style: pw.TextStyle(
-                  fontSize: 20,
-                  fontWeight: pw.FontWeight.bold,
-                  color: primary)),
-          pw.SizedBox(height: 4),
-          pw.Text(
-              '${isEs ? 'Generado' : 'Generated'}: ${DateFormat('MMM d, yyyy').format(DateTime.now())}',
-              style: pw.TextStyle(fontSize: 9, color: grey)),
-          pw.SizedBox(height: 16),
-          if (jobTitle.isNotEmpty || company.isNotEmpty)
-            pw.Container(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: pw.BoxDecoration(
-                  color: PdfColor.fromHex('EEF2FF'),
-                  borderRadius: pw.BorderRadius.circular(6)),
-              child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    if (jobTitle.isNotEmpty)
-                      pw.Text(jobTitle,
-                          style: pw.TextStyle(
-                              fontSize: 14,
-                              fontWeight: pw.FontWeight.bold,
-                              color: primary)),
-                    if (company.isNotEmpty)
-                      pw.Text(company,
-                          style: pw.TextStyle(fontSize: 11, color: grey)),
-                  ]),
-            ),
-          pw.SizedBox(height: 16),
-          pw.Table(
-            border:
-                pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(2.5),
-              1: const pw.FlexColumnWidth(1.5),
-            },
-            children: [
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: primary),
-                children: [
-                  pw.Padding(
-                      padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(isEs ? 'Métrica' : 'Metric',
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              color: PdfColors.white,
-                              fontWeight: pw.FontWeight.bold))),
-                  pw.Padding(
-                      padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(isEs ? 'Valor' : 'Value',
-                          textAlign: pw.TextAlign.right,
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              color: PdfColors.white,
-                              fontWeight: pw.FontWeight.bold))),
-                ],
-              ),
-              pdfRow(isEs ? 'Salario bruto' : 'Gross Salary',
-                  AmountFormatter.ui(salary, 'USD'),
-                  bold: true),
-              pdfRow(isEs ? 'Neto anual' : 'Annual Net Take-Home',
-                  AmountFormatter.ui(netSalary, 'USD'),
-                  bold: true),
-              pdfRow(isEs ? 'Neto mensual' : 'Monthly Net',
-                  AmountFormatter.ui(monthlyNet, 'USD')),
-              if (bonus > 0)
-                pdfRow(isEs ? 'Bono' : 'Bonus',
-                    AmountFormatter.ui(bonus, 'USD')),
-              pdfRow(isEs ? 'Tasa impositiva' : 'Effective Tax Rate',
-                  '${pctFmt.format(taxRate)}%'),
-            ],
-          ),
-          pw.SizedBox(height: 20),
-          pw.Text(
-            isEs
-                ? 'Este reporte es solo informativo. Consulte a un asesor fiscal.'
-                : 'This report is for informational purposes only. Consult a tax professional.',
-            style: pw.TextStyle(
-                fontSize: 8, color: grey, fontStyle: pw.FontStyle.italic),
-          ),
-        ],
-      ),
-    ));
-
-    final pdfBytes = await pdf.save();
+    final params = _HistorySinglePdfParams(
+      isEs: isEs,
+      now: DateFormat('MMM d, yyyy').format(DateTime.now()),
+      jobTitle: jobTitle,
+      company: row['company'] as String? ?? '',
+      salary: (row['salary'] as num?)?.toDouble() ?? 0.0,
+      bonus: (row['bonus'] as num?)?.toDouble() ?? 0.0,
+      netSalary: (row['net_salary'] as num?)?.toDouble() ?? 0.0,
+      monthlyNet: (row['monthly_net'] as num?)?.toDouble() ?? 0.0,
+      taxRate: (row['tax_rate'] as num?)?.toDouble() ?? 0.0,
+    );
+    final pdfBytes =
+        await Isolate.run(() => _buildHistorySinglePdf(params));
     final tmpDir = await getTemporaryDirectory();
     final slug = jobTitle.isNotEmpty
         ? jobTitle.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()

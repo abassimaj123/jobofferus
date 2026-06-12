@@ -10,7 +10,7 @@ class OfferEngine {
   OfferEngine._();
 
   // ── Federal tax constants 2025 ────────────────────────────────────────────
-  static const double _stdDeductionSingle = 15000.0; // 2025
+  static const double _stdDeductionSingle = 15750.0; // 2025
   static const double _ssWageBase = 176100.0; // SS wage base 2025
   static const double _ssRate = 0.062; // 6.2%
   static const double _medicareRate = 0.0145; // 1.45%

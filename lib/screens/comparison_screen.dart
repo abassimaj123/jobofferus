@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
@@ -29,6 +30,283 @@ import '../core/engines/offer_engine.dart' show OfferEngine;
 import '../widgets/save_scenario_button.dart';
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
+
+// ── PDF Isolate support ───────────────────────────────────────────────────────
+
+class _ComparisonPdfParams {
+  final String pdfTitle;
+  final String generated;
+  final String dateLabel;
+  final String winnerLabel;
+  final bool isTie;
+  final String advantage;
+  final String advantageText;
+  final String metric;
+  final String offerALabel;
+  final String offerBLabel;
+  final String? offerCLabel;
+  final bool hasC;
+  // Row labels
+  final String grossSalary;
+  final String netAnnualTakeHome;
+  final String netMonthly;
+  final String effectiveTaxRate;
+  final String annualBonusAfterTax;
+  final String signingBonusAfterTax;
+  final String match401k;
+  final String healthBenefits;
+  final String annualRsu;
+  final String commuteCost;
+  final String totalNetCompensation;
+  final String pdfDisclaimer;
+  // Values A
+  final double grossA, netA, monthlyA, taxRateA, bonusAfterTaxA,
+      signingAfterTaxA, k401kA, healthA, rsuA, commuteA, totalCompA;
+  // Values B
+  final double grossB, netB, monthlyB, taxRateB, bonusAfterTaxB,
+      signingAfterTaxB, k401kB, healthB, rsuB, commuteB, totalCompB;
+  // Values C (nullable)
+  final double? grossC, netC, monthlyC, taxRateC, bonusAfterTaxC,
+      signingAfterTaxC, k401kC, healthC, rsuC, commuteC, totalCompC;
+  final bool showSigning;
+
+  const _ComparisonPdfParams({
+    required this.pdfTitle,
+    required this.generated,
+    required this.dateLabel,
+    required this.winnerLabel,
+    required this.isTie,
+    required this.advantage,
+    required this.advantageText,
+    required this.metric,
+    required this.offerALabel,
+    required this.offerBLabel,
+    this.offerCLabel,
+    required this.hasC,
+    required this.grossSalary,
+    required this.netAnnualTakeHome,
+    required this.netMonthly,
+    required this.effectiveTaxRate,
+    required this.annualBonusAfterTax,
+    required this.signingBonusAfterTax,
+    required this.match401k,
+    required this.healthBenefits,
+    required this.annualRsu,
+    required this.commuteCost,
+    required this.totalNetCompensation,
+    required this.pdfDisclaimer,
+    required this.grossA,
+    required this.netA,
+    required this.monthlyA,
+    required this.taxRateA,
+    required this.bonusAfterTaxA,
+    required this.signingAfterTaxA,
+    required this.k401kA,
+    required this.healthA,
+    required this.rsuA,
+    required this.commuteA,
+    required this.totalCompA,
+    required this.grossB,
+    required this.netB,
+    required this.monthlyB,
+    required this.taxRateB,
+    required this.bonusAfterTaxB,
+    required this.signingAfterTaxB,
+    required this.k401kB,
+    required this.healthB,
+    required this.rsuB,
+    required this.commuteB,
+    required this.totalCompB,
+    this.grossC,
+    this.netC,
+    this.monthlyC,
+    this.taxRateC,
+    this.bonusAfterTaxC,
+    this.signingAfterTaxC,
+    this.k401kC,
+    this.healthC,
+    this.rsuC,
+    this.commuteC,
+    this.totalCompC,
+    required this.showSigning,
+  });
+}
+
+Future<Uint8List> _buildComparisonPdf(_ComparisonPdfParams p) async {
+  final pctFmt = NumberFormat('0.0#', 'en_US');
+  final primary = PdfColor.fromHex('1565C0');
+  final grey = PdfColors.grey700;
+
+  pw.TableRow row(String label, String valA, String valB,
+          {bool bold = false, String? valC}) =>
+      pw.TableRow(children: [
+        pw.Padding(
+            padding: const pw.EdgeInsets.all(6),
+            child: pw.Text(label,
+                style: pw.TextStyle(fontSize: 10, color: grey))),
+        pw.Padding(
+            padding: const pw.EdgeInsets.all(6),
+            child: pw.Text(valA,
+                textAlign: pw.TextAlign.right,
+                style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight:
+                        bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
+        pw.Padding(
+            padding: const pw.EdgeInsets.all(6),
+            child: pw.Text(valB,
+                textAlign: pw.TextAlign.right,
+                style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight:
+                        bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
+        if (p.hasC)
+          pw.Padding(
+              padding: const pw.EdgeInsets.all(6),
+              child: pw.Text(valC ?? '',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight:
+                          bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
+      ]);
+
+  String fmt(double v) => AmountFormatter.ui(v, 'USD');
+  String pct(double v) => '${pctFmt.format(v)}%';
+
+  final pdf = pw.Document();
+  pdf.addPage(pw.Page(
+    pageFormat: PdfPageFormat.a4,
+    margin: const pw.EdgeInsets.all(AppSpacing.xxxl),
+    build: (ctx) => pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+            p.pdfTitle,
+            style: pw.TextStyle(
+                fontSize: AppTextSize.titleMd,
+                fontWeight: pw.FontWeight.bold,
+                color: primary)),
+        pw.SizedBox(height: 4),
+        pw.Text(
+            '${p.generated}: ${p.dateLabel}',
+            style: pw.TextStyle(fontSize: 9, color: grey)),
+        pw.SizedBox(height: 16),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: pw.BoxDecoration(
+            color: PdfColor.fromHex('E3F2FD'),
+            borderRadius: pw.BorderRadius.circular(AppRadius.sm),
+          ),
+          child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('★ ${p.winnerLabel}',
+                    style: pw.TextStyle(
+                        fontSize: AppTextSize.md,
+                        fontWeight: pw.FontWeight.bold,
+                        color: primary)),
+                if (!p.isTie)
+                  pw.Text(
+                      '+${p.advantage} ${p.advantageText}',
+                      style: pw.TextStyle(
+                          fontSize: AppTextSize.xs, color: primary)),
+              ]),
+        ),
+        pw.SizedBox(height: 16),
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+          columnWidths: p.hasC
+              ? {
+                  0: const pw.FlexColumnWidth(2.5),
+                  1: const pw.FlexColumnWidth(1.2),
+                  2: const pw.FlexColumnWidth(1.2),
+                  3: const pw.FlexColumnWidth(1.2),
+                }
+              : {
+                  0: const pw.FlexColumnWidth(2.5),
+                  1: const pw.FlexColumnWidth(1.5),
+                  2: const pw.FlexColumnWidth(1.5),
+                },
+          children: [
+            pw.TableRow(
+              decoration: pw.BoxDecoration(color: primary),
+              children: [
+                pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(p.metric,
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.white,
+                            fontWeight: pw.FontWeight.bold))),
+                pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(p.offerALabel,
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.white,
+                            fontWeight: pw.FontWeight.bold))),
+                pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(p.offerBLabel,
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.white,
+                            fontWeight: pw.FontWeight.bold))),
+                if (p.hasC)
+                  pw.Padding(
+                      padding: const pw.EdgeInsets.all(6),
+                      child: pw.Text(p.offerCLabel ?? '',
+                          textAlign: pw.TextAlign.right,
+                          style: pw.TextStyle(
+                              fontSize: 10,
+                              color: PdfColors.white,
+                              fontWeight: pw.FontWeight.bold))),
+              ],
+            ),
+            row(p.grossSalary, fmt(p.grossA), fmt(p.grossB),
+                bold: true, valC: p.hasC ? fmt(p.grossC!) : null),
+            row(p.netAnnualTakeHome, fmt(p.netA), fmt(p.netB),
+                bold: true, valC: p.hasC ? fmt(p.netC!) : null),
+            row(p.netMonthly, fmt(p.monthlyA), fmt(p.monthlyB),
+                valC: p.hasC ? fmt(p.monthlyC!) : null),
+            row(p.effectiveTaxRate, pct(p.taxRateA), pct(p.taxRateB),
+                valC: p.hasC ? pct(p.taxRateC!) : null),
+            row(p.annualBonusAfterTax, fmt(p.bonusAfterTaxA),
+                fmt(p.bonusAfterTaxB),
+                valC: p.hasC ? fmt(p.bonusAfterTaxC!) : null),
+            if (p.showSigning)
+              row(p.signingBonusAfterTax, fmt(p.signingAfterTaxA),
+                  fmt(p.signingAfterTaxB),
+                  valC: p.hasC ? fmt(p.signingAfterTaxC!) : null),
+            row(p.match401k, fmt(p.k401kA), fmt(p.k401kB),
+                valC: p.hasC ? fmt(p.k401kC!) : null),
+            row(p.healthBenefits, fmt(p.healthA), fmt(p.healthB),
+                valC: p.hasC ? fmt(p.healthC!) : null),
+            row(p.annualRsu, fmt(p.rsuA), fmt(p.rsuB),
+                valC: p.hasC ? fmt(p.rsuC!) : null),
+            row(p.commuteCost, fmt(p.commuteA), fmt(p.commuteB),
+                valC: p.hasC ? fmt(p.commuteC!) : null),
+            row(p.totalNetCompensation, fmt(p.totalCompA), fmt(p.totalCompB),
+                bold: true, valC: p.hasC ? fmt(p.totalCompC!) : null),
+          ],
+        ),
+        pw.SizedBox(height: 20),
+        pw.Text(
+          p.pdfDisclaimer,
+          style: pw.TextStyle(
+              fontSize: 8, color: grey, fontStyle: pw.FontStyle.italic),
+        ),
+      ],
+    ),
+  ));
+
+  return pdf.save();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class ComparisonScreen extends StatefulWidget {
   final JobOffer offerA;
@@ -387,7 +665,6 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
   Future<void> _exportPdfImpl(bool isSpanish) async {
     final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
-    final pctFmt = NumberFormat('0.0#', 'en_US');
     final a = widget.result.resultA;
     final b = widget.result.resultB;
     final c = widget.result.resultC;
@@ -400,198 +677,71 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
             : winner == Winner.offerC
                 ? s.offerCWins
                 : s.tie;
-    final advantage = AmountFormatter.ui(widget.result.annualAdvantage, 'USD');
 
-    final pdf = pw.Document();
-    final primary = PdfColor.fromHex('1565C0');
-    final grey = PdfColors.grey700;
+    final params = _ComparisonPdfParams(
+      pdfTitle: s.pdfTitle,
+      generated: s.generated,
+      dateLabel: DateFormat('MMM d, yyyy').format(DateTime.now()),
+      winnerLabel: winnerLabel,
+      isTie: widget.result.isTie,
+      advantage: AmountFormatter.ui(widget.result.annualAdvantage, 'USD'),
+      advantageText: s.advantage,
+      metric: s.metric,
+      offerALabel: s.offerALabel,
+      offerBLabel: s.offerBLabel,
+      offerCLabel: hasC ? s.offerCLabel : null,
+      hasC: hasC,
+      grossSalary: s.grossSalary,
+      netAnnualTakeHome: s.netAnnualTakeHome,
+      netMonthly: s.netMonthly,
+      effectiveTaxRate: s.effectiveTaxRate,
+      annualBonusAfterTax: s.annualBonusAfterTax,
+      signingBonusAfterTax: s.signingBonusAfterTax,
+      match401k: s.match401k,
+      healthBenefits: s.healthBenefits,
+      annualRsu: s.annualRsu,
+      commuteCost: s.commuteCost,
+      totalNetCompensation: s.totalNetCompensation,
+      pdfDisclaimer: s.pdfDisclaimer,
+      grossA: a.grossSalary,
+      netA: a.netTakeHome,
+      monthlyA: a.monthlyTakeHome,
+      taxRateA: a.effectiveTaxRate,
+      bonusAfterTaxA: a.bonusAfterTax,
+      signingAfterTaxA: a.signingBonusAfterTax,
+      k401kA: a.k401kMatch,
+      healthA: a.healthBenefits,
+      rsuA: a.annualRsuValue,
+      commuteA: a.commuteCost,
+      totalCompA: a.totalCompensation,
+      grossB: b.grossSalary,
+      netB: b.netTakeHome,
+      monthlyB: b.monthlyTakeHome,
+      taxRateB: b.effectiveTaxRate,
+      bonusAfterTaxB: b.bonusAfterTax,
+      signingAfterTaxB: b.signingBonusAfterTax,
+      k401kB: b.k401kMatch,
+      healthB: b.healthBenefits,
+      rsuB: b.annualRsuValue,
+      commuteB: b.commuteCost,
+      totalCompB: b.totalCompensation,
+      grossC: c?.grossSalary,
+      netC: c?.netTakeHome,
+      monthlyC: c?.monthlyTakeHome,
+      taxRateC: c?.effectiveTaxRate,
+      bonusAfterTaxC: c?.bonusAfterTax,
+      signingAfterTaxC: c?.signingBonusAfterTax,
+      k401kC: c?.k401kMatch,
+      healthC: c?.healthBenefits,
+      rsuC: c?.annualRsuValue,
+      commuteC: c?.commuteCost,
+      totalCompC: c?.totalCompensation,
+      showSigning: a.signingBonusAfterTax > 0 ||
+          b.signingBonusAfterTax > 0 ||
+          (c?.signingBonusAfterTax ?? 0) > 0,
+    );
 
-    pw.TableRow row(String label, String valA, String valB,
-            {bool bold = false, String? valC}) =>
-        pw.TableRow(children: [
-          pw.Padding(
-              padding: const pw.EdgeInsets.all(6),
-              child: pw.Text(label,
-                  style: pw.TextStyle(fontSize: 10, color: grey))),
-          pw.Padding(
-              padding: const pw.EdgeInsets.all(6),
-              child: pw.Text(valA,
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                      fontSize: 10,
-                      fontWeight:
-                          bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
-          pw.Padding(
-              padding: const pw.EdgeInsets.all(6),
-              child: pw.Text(valB,
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                      fontSize: 10,
-                      fontWeight:
-                          bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
-          if (hasC)
-            pw.Padding(
-                padding: const pw.EdgeInsets.all(6),
-                child: pw.Text(valC ?? '',
-                    textAlign: pw.TextAlign.right,
-                    style: pw.TextStyle(
-                        fontSize: 10,
-                        fontWeight:
-                            bold ? pw.FontWeight.bold : pw.FontWeight.normal))),
-        ]);
-
-    pdf.addPage(pw.Page(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(AppSpacing.xxxl),
-      build: (ctx) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-              s.pdfTitle,
-              style: pw.TextStyle(
-                  fontSize: AppTextSize.titleMd,
-                  fontWeight: pw.FontWeight.bold,
-                  color: primary)),
-          pw.SizedBox(height: 4),
-          pw.Text(
-              '${s.generated}: ${DateFormat('MMM d, yyyy').format(DateTime.now())}',
-              style: pw.TextStyle(fontSize: 9, color: grey)),
-          pw.SizedBox(height: 16),
-          // Winner banner
-          pw.Container(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: pw.BoxDecoration(
-              color: PdfColor.fromHex('E3F2FD'),
-              borderRadius: pw.BorderRadius.circular(AppRadius.sm),
-            ),
-            child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('★ $winnerLabel',
-                      style: pw.TextStyle(
-                          fontSize: AppTextSize.md,
-                          fontWeight: pw.FontWeight.bold,
-                          color: primary)),
-                  if (!widget.result.isTie)
-                    pw.Text(
-                        '+$advantage ${s.advantage}',
-                        style: pw.TextStyle(
-                            fontSize: AppTextSize.xs, color: primary)),
-                ]),
-          ),
-          pw.SizedBox(height: 16),
-          // Comparison table
-          pw.Table(
-            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-            columnWidths: hasC
-                ? {
-                    0: const pw.FlexColumnWidth(2.5),
-                    1: const pw.FlexColumnWidth(1.2),
-                    2: const pw.FlexColumnWidth(1.2),
-                    3: const pw.FlexColumnWidth(1.2),
-                  }
-                : {
-                    0: const pw.FlexColumnWidth(2.5),
-                    1: const pw.FlexColumnWidth(1.5),
-                    2: const pw.FlexColumnWidth(1.5),
-                  },
-            children: [
-              // Header
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: primary),
-                children: [
-                  pw.Padding(
-                      padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(s.metric,
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              color: PdfColors.white,
-                              fontWeight: pw.FontWeight.bold))),
-                  pw.Padding(
-                      padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(s.offerALabel,
-                          textAlign: pw.TextAlign.right,
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              color: PdfColors.white,
-                              fontWeight: pw.FontWeight.bold))),
-                  pw.Padding(
-                      padding: const pw.EdgeInsets.all(6),
-                      child: pw.Text(s.offerBLabel,
-                          textAlign: pw.TextAlign.right,
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              color: PdfColors.white,
-                              fontWeight: pw.FontWeight.bold))),
-                  if (hasC)
-                    pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text(s.offerCLabel,
-                            textAlign: pw.TextAlign.right,
-                            style: pw.TextStyle(
-                                fontSize: 10,
-                                color: PdfColors.white,
-                                fontWeight: pw.FontWeight.bold))),
-                ],
-              ),
-              row(s.grossSalary,
-                  AmountFormatter.ui(a.grossSalary, 'USD'), AmountFormatter.ui(b.grossSalary, 'USD'),
-                  bold: true,
-                  valC: hasC ? AmountFormatter.ui(c!.grossSalary, 'USD') : null),
-              row(s.netAnnualTakeHome,
-                  AmountFormatter.ui(a.netTakeHome, 'USD'), AmountFormatter.ui(b.netTakeHome, 'USD'),
-                  bold: true,
-                  valC: hasC ? AmountFormatter.ui(c!.netTakeHome, 'USD') : null),
-              row(s.netMonthly,
-                  AmountFormatter.ui(a.monthlyTakeHome, 'USD'), AmountFormatter.ui(b.monthlyTakeHome, 'USD'),
-                  valC: hasC ? AmountFormatter.ui(c!.monthlyTakeHome, 'USD') : null),
-              row(
-                  s.effectiveTaxRate,
-                  '${pctFmt.format(a.effectiveTaxRate)}%',
-                  '${pctFmt.format(b.effectiveTaxRate)}%',
-                  valC: hasC ? '${pctFmt.format(c!.effectiveTaxRate)}%' : null),
-              row(s.annualBonusAfterTax,
-                  AmountFormatter.ui(a.bonusAfterTax, 'USD'), AmountFormatter.ui(b.bonusAfterTax, 'USD'),
-                  valC: hasC ? AmountFormatter.ui(c!.bonusAfterTax, 'USD') : null),
-              if (a.signingBonusAfterTax > 0 ||
-                  b.signingBonusAfterTax > 0 ||
-                  (c?.signingBonusAfterTax ?? 0) > 0)
-                row(
-                    s.signingBonusAfterTax,
-                    AmountFormatter.ui(a.signingBonusAfterTax, 'USD'),
-                    AmountFormatter.ui(b.signingBonusAfterTax, 'USD'),
-                    valC: hasC ? AmountFormatter.ui(c!.signingBonusAfterTax, 'USD') : null),
-              row(s.match401k,
-                  AmountFormatter.ui(a.k401kMatch, 'USD'), AmountFormatter.ui(b.k401kMatch, 'USD'),
-                  valC: hasC ? AmountFormatter.ui(c!.k401kMatch, 'USD') : null),
-              row(s.healthBenefits,
-                  AmountFormatter.ui(a.healthBenefits, 'USD'), AmountFormatter.ui(b.healthBenefits, 'USD'),
-                  valC: hasC ? AmountFormatter.ui(c!.healthBenefits, 'USD') : null),
-              row(s.annualRsu,
-                  AmountFormatter.ui(a.annualRsuValue, 'USD'), AmountFormatter.ui(b.annualRsuValue, 'USD'),
-                  valC: hasC ? AmountFormatter.ui(c!.annualRsuValue, 'USD') : null),
-              row(s.commuteCost,
-                  AmountFormatter.ui(a.commuteCost, 'USD'), AmountFormatter.ui(b.commuteCost, 'USD'),
-                  valC: hasC ? AmountFormatter.ui(c!.commuteCost, 'USD') : null),
-              row(
-                  s.totalNetCompensation,
-                  AmountFormatter.ui(a.totalCompensation, 'USD'),
-                  AmountFormatter.ui(b.totalCompensation, 'USD'),
-                  bold: true,
-                  valC: hasC ? AmountFormatter.ui(c!.totalCompensation, 'USD') : null),
-            ],
-          ),
-          pw.SizedBox(height: 20),
-          pw.Text(
-            s.pdfDisclaimer,
-            style: pw.TextStyle(
-                fontSize: 8, color: grey, fontStyle: pw.FontStyle.italic),
-          ),
-        ],
-      ),
-    ));
-
-    final pdfBytes = await pdf.save();
+    final pdfBytes = await Isolate.run(() => _buildComparisonPdf(params));
     final tmpDir = await getTemporaryDirectory();
     final pdfFile = File(
         '${tmpDir.path}/job_offer_comparison_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf');

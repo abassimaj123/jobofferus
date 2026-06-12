@@ -26,7 +26,8 @@ class LocalTaxData {
     // New York
     'New York, NY': 0.03876, // NYC resident income tax (top rate ~3.876%)
     // California — no general city income tax
-    'San Francisco, CA': 0.015, // SF payroll expense tax (~ 1.5% on wages)
+    // SF Gross Receipts Tax is an employer-side payroll tax; employees are not subject.
+    'San Francisco, CA': 0.0, // Employer-side tax — employees not subject
     // Ohio cities
     'Columbus, OH': 0.025, // 2.5% city income tax
     'Cleveland, OH': 0.025, // 2.5%

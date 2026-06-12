@@ -11,6 +11,9 @@ build/
 local.properties
 *.iml
 
+# AdMob production IDs (injected via --dart-define-from-file)
+admob.json
+
 # ── iOS artifacts (opt-in via calcwise_core/ios_templates/activate_ios.sh) ───
 ios/Pods/
 ios/.symlinks/
@@ -24,3 +27,6 @@ ios/build/
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 release.env
+hs_err_pid*.log
+replay_pid*.log
+flutter_*.log

@@ -50,13 +50,13 @@ class StateTaxData {
     // ── Flat rate states ──────────────────────────────────────────────────
     'CO': [(double.infinity, 0.044)], // 4.4%
     'IL': [(double.infinity, 0.0495)], // 4.95%
-    'IN': [(double.infinity, 0.0305)], // 3.05% (2025)
+    'IN': [(double.infinity, 0.0300)], // 3.00% (2025)
     'KY': [(double.infinity, 0.040)], // 4.0%
     'MA': [(double.infinity, 0.050)], // 5.0%
     'MI': [(double.infinity, 0.0425)], // 4.25%
-    'NC': [(double.infinity, 0.045)], // 4.5%
+    'NC': [(double.infinity, 0.0425)], // 4.25% (2025)
     'PA': [(double.infinity, 0.0307)], // 3.07%
-    'UT': [(double.infinity, 0.0465)], // 4.65%
+    'UT': [(double.infinity, 0.0455)], // 4.55% (2025)
 
     // ── Progressive states ────────────────────────────────────────────────
     // Alabama
