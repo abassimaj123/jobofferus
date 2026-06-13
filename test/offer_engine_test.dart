@@ -11,20 +11,22 @@ void main() {
     });
 
     test('income below standard deduction (\$14k) — zero tax', () {
-      // standard deduction = 15000; taxable = 0
+      // 2025 standard deduction = 15750; taxable = 0
       expect(OfferEngine.federalTax(14000), closeTo(0.0, 0.01));
     });
 
     test('\$60k gross — tax within expected range', () {
-      // taxable = 45000; 10% on 11925 = 1192.5; 12% on 33075 = 3969 → ~5161.5
+      // 2025 std deduction = 15750; taxable = 44250
+      // 10% on 11925 = 1192.5; 12% on 32325 = 3879 → 5071.5
       final tax = OfferEngine.federalTax(60000);
-      expect(tax, closeTo(5161.5, 50));
+      expect(tax, closeTo(5071.5, 50));
     });
 
     test('\$100k gross — tax within expected range', () {
-      // taxable = 85000; 10% on 11925=1192.5; 12% on 36550=4386; 22% on 36525=8035.5 → 13614
+      // 2025 std deduction = 15750; taxable = 84250
+      // 10% on 11925=1192.5; 12% on 36550=4386; 22% on 35775=7870.5 → 13449
       final tax = OfferEngine.federalTax(100000);
-      expect(tax, closeTo(13614, 50));
+      expect(tax, closeTo(13449, 50));
     });
 
     test('\$200k gross — hits 24% bracket', () {
