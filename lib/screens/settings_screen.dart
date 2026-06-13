@@ -151,6 +151,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () => _launch('https://calqwise.com/privacy'),
                   ),
                   const Divider(height: 1),
+                  _Tile(
+                    icon: Icons.manage_search_rounded,
+                    label: 'Privacy Settings',
+                    onTap: showCalcwisePrivacyOptions,
+                  ),
+                  const Divider(height: 1),
                   CalcwiseRateAppTile(label: s.rateTheApp),
                   const Divider(height: 1),
                   _Tile(
