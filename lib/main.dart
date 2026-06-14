@@ -9,7 +9,9 @@ import 'package:calcwise_core/calcwise_core.dart'
         CalcwiseRewardAdSheet,
         CalcwiseRemoteConfig,
         requestCalcwiseConsent,
-        SmartHistoryService;
+        SmartHistoryService,
+        CalcwiseTax,
+        calcwiseTaxRemoteFetch;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -55,6 +57,7 @@ final smartHistoryService = SmartHistoryService(
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await CalcwiseTax.init(remoteFetcher: calcwiseTaxRemoteFetch);
   await CalcwiseRemoteConfig.initialize();
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   PlatformDispatcher.instance.onError = (error, stack) {
