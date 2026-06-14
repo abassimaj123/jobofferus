@@ -1,49 +1,25 @@
+import 'package:calcwise_core/calcwise_core.dart'
+    show CalcwiseTax, taxOnIncome;
 import '../models/job_offer.dart';
 import '../models/comparison_result.dart';
 import '../data/state_tax_data.dart';
 import '../data/city_col_data.dart';
 import '../data/local_taxes.dart';
 
-/// Pure Dart calculation engine — no Flutter dependencies.
 /// All monetary values are annual USD unless noted.
 class OfferEngine {
   OfferEngine._();
 
-  // ── Federal tax constants 2025 ────────────────────────────────────────────
-  static const double _stdDeductionSingle = 15750.0; // 2025
-  static const double _ssWageBase = 176100.0; // SS wage base 2025
-  static const double _ssRate = 0.062; // 6.2%
-  static const double _medicareRate = 0.0145; // 1.45%
-  static const double _additionalMedicareRate = 0.009; // 0.9% over $200k
+  // ── FICA constants 2025 (SSA Notice 2024-80) ─────────────────────────────
+  static const double _ssWageBase = 176100.0;
+  static const double _ssRate = 0.062;
+  static const double _medicareRate = 0.0145;
+  static const double _additionalMedicareRate = 0.009;
 
-  /// Federal income tax (single filer, standard deduction, 2025 brackets).
-  static double federalTax(double grossIncome) {
-    final taxable =
-        (grossIncome - _stdDeductionSingle).clamp(0.0, double.infinity);
-    return _applyFederalBrackets(taxable);
-  }
-
-  static double _applyFederalBrackets(double taxable) {
-    // 2025 single brackets
-    const brackets = [
-      (11925.0, 0.10),
-      (48475.0, 0.12),
-      (103350.0, 0.22),
-      (197300.0, 0.24),
-      (250525.0, 0.32),
-      (626350.0, 0.35),
-      (double.infinity, 0.37),
-    ];
-    double tax = 0;
-    double prev = 0;
-    for (final (upper, rate) in brackets) {
-      if (taxable <= prev) break;
-      final chunk = taxable > upper ? upper - prev : taxable - prev;
-      tax += chunk * rate;
-      prev = upper;
-    }
-    return tax;
-  }
+  /// Federal income tax (single filer, 2025). Brackets + standard deduction
+  /// sourced from CalcwiseTax registry — remote-updatable, never degrades.
+  static double federalTax(double grossIncome) =>
+      CalcwiseTax.registry.incomeTax('us_federal', 2025, grossIncome) ?? 0.0;
 
   /// FICA taxes: Social Security + Medicare + Additional Medicare.
   static double ficaTax(double grossIncome) {
