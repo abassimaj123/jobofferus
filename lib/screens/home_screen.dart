@@ -188,16 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _showPaywall();
       return;
     }
-    final trigger = await paywallSession.recordAction();
-    if (!mounted) return;
-    if (trigger == PaywallTrigger.soft) {
-      PaywallSoft.show(context);
-      return;
-    }
-    if (trigger == PaywallTrigger.hard) {
-      await PaywallHard.show(context);
-      return;
-    }
     AnalyticsService.instance.maybeLogFirstCalculate();
     AnalyticsService.instance.logCalculationCompleted(params: {
       'salary_a': _offerA.baseSalary.round(),
