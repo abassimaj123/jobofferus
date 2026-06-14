@@ -232,6 +232,10 @@ class _OfferFormCardState extends State<OfferFormCard>
                             fontSize: AppTextSize.md,
                             fontWeight: FontWeight.w600),
                       ),
+                    if (widget.value.deadline != null) ...[
+                      const SizedBox(height: 4),
+                      _DeadlineHeaderBadge(deadline: widget.value.deadline!),
+                    ],
                   ],
                 )),
                 Container(
@@ -1045,6 +1049,76 @@ class _BenchmarkChip extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ── Deadline header badge (shown in collapsed card header) ───────────────────
+
+class _DeadlineHeaderBadge extends StatelessWidget {
+  final DateTime deadline;
+  const _DeadlineHeaderBadge({required this.deadline});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final daysLeft = deadline.difference(now).inDays;
+    if (daysLeft < 0) return const SizedBox.shrink();
+
+    final Color badgeColor;
+    final String label;
+
+    if (daysLeft <= 3) {
+      badgeColor = AppTheme.errorRed;
+      label = '$daysLeft days left';
+    } else if (daysLeft <= 14) {
+      badgeColor = AppTheme.warningOrange;
+      label = '$daysLeft days left';
+    } else {
+      badgeColor = Colors.white;
+      label = _fmtDate(deadline);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.smPlus, vertical: 2),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.45)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.event_rounded,
+            size: 11, color: badgeColor.withValues(alpha: 0.9)),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: AppTextSize.xxs,
+            fontWeight: FontWeight.w700,
+            color: badgeColor.withValues(alpha: 0.95),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  static String _fmtDate(DateTime d) {
+    const months = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return '${months[d.month]} ${d.day}';
   }
 }
 
