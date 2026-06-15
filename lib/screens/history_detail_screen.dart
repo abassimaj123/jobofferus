@@ -906,20 +906,25 @@ class _ComparisonBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
 
           // ── Offer summary cards ────────────────────────────────────────────
-          Row(children: [
-            for (var i = 0; i < offers.length; i++) ...[
-              if (i > 0) const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _OfferSummaryCard(
-                  offer: offers[i],
-                  color: offerColors[i.clamp(0, 2)],
-                  isWinner: i == winnerIdx,
-                  isEs: isEs,
-                  ct: ct,
-                ),
-              ),
-            ],
-          ]),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < offers.length; i++) ...[
+                  if (i > 0) const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _OfferSummaryCard(
+                      offer: offers[i],
+                      color: offerColors[i.clamp(0, 2)],
+                      isWinner: i == winnerIdx,
+                      isEs: isEs,
+                      ct: ct,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
           const SizedBox(height: AppSpacing.lg),
 
           // ── Income breakdown ───────────────────────────────────────────────

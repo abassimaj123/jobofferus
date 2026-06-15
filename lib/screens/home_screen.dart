@@ -180,6 +180,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _debounce = Timer(AppDuration.page, _compare);
   }
 
+  void _scheduleAutoSaveIfValid() {
+    if (!_canCompare) return;
+    smartHistoryService.scheduleAutoSave(
+      appKey: _appKey,
+      screenId: _screenId,
+      inputHash: _inputHash(),
+      l1: _l1Snapshot(),
+      l2: _l2Snapshot(),
+      onSaved: () {
+        if (mounted) {
+          setState(() {});
+          HistoryScreen.refreshNotifier.value++;
+        }
+      },
+    );
+  }
+
   void _compare() async {
     if (!_canCompare) return;
     // 3-offer comparison is a premium-only feature (hard gate).
@@ -266,9 +283,18 @@ class _HomeScreenState extends State<HomeScreen> {
             offerC: _offerC,
             showOfferC: _showOfferC,
             isSp: isSp,
-            onOfferAChanged: (o) => setState(() => _offerA = o),
-            onOfferBChanged: (o) => setState(() => _offerB = o),
-            onOfferCChanged: (o) => setState(() => _offerC = o),
+            onOfferAChanged: (o) {
+              setState(() => _offerA = o);
+              _scheduleAutoSaveIfValid();
+            },
+            onOfferBChanged: (o) {
+              setState(() => _offerB = o);
+              _scheduleAutoSaveIfValid();
+            },
+            onOfferCChanged: (o) {
+              setState(() => _offerC = o);
+              _scheduleAutoSaveIfValid();
+            },
             onToggleOfferC: () => setState(() => _showOfferC = !_showOfferC),
             appBar: _appBar(isSp),
             saveButton: canSave

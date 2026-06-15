@@ -1730,7 +1730,10 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Grant summary row
-                  Row(children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                     Expanded(
                         child: _GrantChip(
                       label: (isSp ? const AppStringsEs() : const AppStringsEn()).totalGrantA,
@@ -1753,7 +1756,9 @@ class _RsuVestingCardState extends State<_RsuVestingCard> {
                         color: AppTheme.offerCDeep,
                       )),
                     ],
-                  ]),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.mdPlus),
                   // Vesting table header
                   _VestHeader(isSp: isSp),
