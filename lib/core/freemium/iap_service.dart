@@ -5,8 +5,9 @@ import 'package:calcwise_core/calcwise_core.dart';
 import 'freemium_service.dart';
 import '../services/analytics_service.dart';
 
-// Re-export the iapErrorNotifier from library for backward compatibility
-export 'package:calcwise_core/services/iap_service.dart' show iapErrorNotifier;
+// Re-export the iapErrorNotifier and iapRestoreResultNotifier from library for backward compatibility
+export 'package:calcwise_core/services/iap_service.dart'
+    show iapErrorNotifier, iapRestoreResultNotifier;
 
 /// Global IAP singleton for JobOfferUS.
 class IAPService {

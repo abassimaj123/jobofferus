@@ -14,7 +14,7 @@ import '../widgets/offer_form_card.dart';
 import '../widgets/paywall_hard.dart';
 import '../widgets/paywall_soft.dart';
 import '../main.dart'
-    show paywallSession, isSpanishNotifier, smartHistoryService;
+    show adService, paywallSession, isSpanishNotifier, smartHistoryService;
 import '../widgets/save_scenario_button.dart';
 import 'comparison_screen.dart';
 import 'history_screen.dart';
@@ -134,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _wasPremium = freemiumService.hasFullAccess;
     AnalyticsService.instance.logScreenView('home');
     iapErrorNotifier.addListener(_onIapError);
+    iapRestoreResultNotifier.addListener(_onRestoreResult);
     freemiumService.isPremiumNotifier.addListener(_onPremiumChange);
     WidgetsBinding.instance.addPostFrameCallback(
         (_) async => await paywallSession.recordSession());
@@ -142,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     iapErrorNotifier.removeListener(_onIapError);
+    iapRestoreResultNotifier.removeListener(_onRestoreResult);
     freemiumService.isPremiumNotifier.removeListener(_onPremiumChange);
     _debounce?.cancel();
     smartHistoryService.cancelPendingSave(_appKey, _screenId);
@@ -150,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onPremiumChange() {
     final now = freemiumService.hasFullAccess;
+    unawaited(AnalyticsService.instance.setUserPremium(now));
     if (now && !_wasPremium && mounted) {
       showPremiumWelcomeSnackBar(context, isSpanish: isSpanishNotifier.value);
     }
@@ -161,6 +164,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (msg == null || !mounted) return;
     showIapErrorSnackBar(context, msg);
     iapErrorNotifier.value = null;
+  }
+
+  void _onRestoreResult() {
+    final result = iapRestoreResultNotifier.value;
+    if (result == null || !mounted) return;
+    final isEs = isSpanishNotifier.value;
+    final msg = result == 'restored'
+        ? (isEs ? '¡Premium restaurado!' : 'Premium restored!')
+        : (isEs ? 'No hay compras para restaurar.' : 'No purchases to restore.');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    );
+    iapRestoreResultNotifier.value = null;
   }
 
   void _debouncedCompare() {
@@ -239,6 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showPaywall() {
     final isSp = isSpanishNotifier.value;
     AnalyticsService.instance.logPaywallViewed('hard_gate_offer_c');
+    AnalyticsService.instance.logPaywallShown('hard');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -309,6 +326,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         l2: _l2Snapshot(),
                         label: label,
                       );
+                      HistoryScreen.refreshNotifier.value++;
+                      try { AnalyticsService.instance.logResultSaved(); } catch (_) {}
+                      adService.onSave();
+                      paywallSession.recordAction().ignore();
                     },
                   )
                 : null,
@@ -454,7 +475,10 @@ class _HomeScreenState extends State<HomeScreen> {
               transitionDuration: AppDuration.base,
             ),
           ),
-          onPremium: () => PaywallHard.show(context),
+          onPremium: () {
+            AnalyticsService.instance.logPaywallShown('hard');
+            PaywallHard.show(context);
+          },
         ),
       ],
     );

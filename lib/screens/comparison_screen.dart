@@ -24,7 +24,7 @@ import '../widgets/paywall_soft.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:share_plus/share_plus.dart';
-import '../main.dart' show adService, smartHistoryService;
+import '../main.dart' show adService, paywallSession, smartHistoryService;
 import 'history_screen.dart';
 import '../core/engines/offer_engine.dart' show OfferEngine;
 import '../widgets/save_scenario_button.dart';
@@ -821,6 +821,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
   void _showPaywall(BuildContext context, bool isSpanish) {
     AnalyticsService.instance.logPaywallViewed('comparison_history_limit');
+    AnalyticsService.instance.logPaywallShown('hard');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -857,6 +858,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       if (pinnedCount >= MonetizationConfig.freePinnedLimit) {
         if (!mounted) return;
         final ss = isSpanish ? const AppStringsEs() : const AppStringsEn();
+        AnalyticsService.instance.logPaywallShown('soft');
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
@@ -892,6 +894,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
       if (!mounted) return;
       setState(() => _saved = true);
+      paywallSession.recordAction().ignore();
     } catch (_) {
       if (!mounted) return;
       final ss = isSpanish ? const AppStringsEs() : const AppStringsEn();
