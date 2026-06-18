@@ -18,30 +18,33 @@ class DeadlineNotificationService {
   /// Initialize the notification plugin and request permissions.
   Future<void> initialize() async {
     if (_initialized) return;
+    try {
+      tz_data.initializeTimeZones();
 
-    tz_data.initializeTimeZones();
+      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosInit = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+      const initSettings = InitializationSettings(
+        android: androidInit,
+        iOS: iosInit,
+      );
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-    const initSettings = InitializationSettings(
-      android: androidInit,
-      iOS: iosInit,
-    );
+      await _plugin.initialize(initSettings);
 
-    await _plugin.initialize(initSettings);
+      // Request Android 13+ notification permission
+      final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImpl != null) {
+        await androidImpl.requestNotificationsPermission();
+      }
 
-    // Request Android 13+ notification permission
-    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (androidImpl != null) {
-      await androidImpl.requestNotificationsPermission();
+      _initialized = true;
+    } catch (_) {
+      // flutter_local_notifications v18 may throw on Android 14 — non-fatal.
     }
-
-    _initialized = true;
   }
 
   /// Schedule two notifications for an offer deadline:
@@ -71,16 +74,18 @@ class DeadlineNotificationService {
       final body48h = isSpanish
           ? '$offerLabel — vence el ${_fmtEs(deadline)}'
           : '$offerLabel expires on ${_fmtEn(deadline)}';
-      await _plugin.zonedSchedule(
-        _idFor(offerLabel, 48),
-        title48h,
-        body48h,
-        tzAlert48h,
-        _notifDetails(),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
+      try {
+        await _plugin.zonedSchedule(
+          _idFor(offerLabel, 48),
+          title48h,
+          body48h,
+          tzAlert48h,
+          _notifDetails(),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      } catch (_) {}
     }
 
     // Day-of notification at 09:00 local time
@@ -93,16 +98,18 @@ class DeadlineNotificationService {
       final bodyToday = isSpanish
           ? '$offerLabel — el plazo vence hoy'
           : '$offerLabel deadline is today';
-      await _plugin.zonedSchedule(
-        _idFor(offerLabel, 0),
-        titleToday,
-        bodyToday,
-        tzDayOf,
-        _notifDetails(),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
+      try {
+        await _plugin.zonedSchedule(
+          _idFor(offerLabel, 0),
+          titleToday,
+          bodyToday,
+          tzDayOf,
+          _notifDetails(),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      } catch (_) {}
     }
   }
 
