@@ -153,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const Divider(height: 1),
                   _Tile(
                     icon: Icons.manage_search_rounded,
-                    label: 'Privacy Settings',
+                    label: isSp ? 'Configuración de Privacidad' : 'Privacy Settings',
                     onTap: showCalcwisePrivacyOptions,
                   ),
                   const Divider(height: 1),
