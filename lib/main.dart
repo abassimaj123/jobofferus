@@ -13,6 +13,7 @@ import 'package:calcwise_core/calcwise_core.dart'
         SmartHistoryService,
         CalcwiseTax,
         calcwiseTaxRemoteFetch;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -68,9 +69,11 @@ void main() async {
   };
   await requestCalcwiseConsent();
   await MobileAds.instance.initialize();
-  unawaited(MobileAds.instance.updateRequestConfiguration(
-    RequestConfiguration(testDeviceIds: ['FD16D4616C3A21C3ACE5E48F8DC9C1DC']),
-  ));
+  if (kDebugMode) {
+    await MobileAds.instance.updateRequestConfiguration(
+      RequestConfiguration(testDeviceIds: ['FD16D4616C3A21C3ACE5E48F8DC9C1DC']),
+    );
+  }
   if (AdConfig.adsEnabled) await adService.initialize();
   await freemiumService.initialize();
   await paywallSession.initialize();
