@@ -341,6 +341,7 @@ void main() {
         stateCode: 'TX',
         benefits: 0,
         commuteCostAnnual: 0,
+        ptoDays: 15,
       );
       expect(proj.length, equals(5));
     });
@@ -355,6 +356,7 @@ void main() {
         stateCode: 'TX',
         benefits: 0,
         commuteCostAnnual: 0,
+        ptoDays: 15,
       );
       for (int i = 1; i < proj.length; i++) {
         expect(proj[i], greaterThan(proj[i - 1]));
@@ -371,6 +373,7 @@ void main() {
         stateCode: 'TX',
         benefits: 0,
         commuteCostAnnual: 0,
+        ptoDays: 15,
       );
       for (int i = 1; i < proj.length; i++) {
         expect(proj[i], closeTo(proj[0], 1));
