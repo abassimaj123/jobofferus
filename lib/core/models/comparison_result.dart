@@ -57,7 +57,7 @@ class OfferResult {
   });
 
   double get monthlyTakeHome => netTakeHome / 12;
-  double get monthlyTotalComp => totalCompensation / 12;
+  double get monthlyTotalComp => (totalCompensation - signingBonusAfterTax) / 12;
 }
 
 enum Winner { offerA, offerB, offerC, tie }

@@ -81,14 +81,14 @@ class OfferEngine {
   }
 
   /// Annual commute cost (IRS mileage rate × 2 ways × work days).
-  /// Uses 2026 IRS standard mileage rate of $0.725/mile.
+  /// Uses 2025 IRS standard mileage rate of $0.670/mile (IRS Rev. Proc. 2024-38).
   static double commuteCost({
     required double milesOneWay,
     required bool isRemote,
     int workDaysPerYear = 235, // excludes PTO + holidays
   }) {
     if (isRemote || milesOneWay <= 0) return 0;
-    const irsRate = 0.725; // IRS 2026
+    const irsRate = 0.670; // IRS 2025
     return milesOneWay * 2 * workDaysPerYear * irsRate;
   }
 
@@ -200,6 +200,7 @@ class OfferEngine {
     required String stateCode,
     required double benefits,
     required double commuteCostAnnual,
+    required int ptoDays,
     String cityName = '',
   }) {
     final result = <double>[];
@@ -213,7 +214,7 @@ class OfferEngine {
         stateCode: stateCode,
         cityName: cityName,
         benefits: benefits,
-        ptoValue: ptoValue(salary, 15), // assume 15 PTO for projection
+        ptoValue: ptoValue(salary, ptoDays),
         rsuValue: 0,
         commuteCost: commuteCostAnnual,
       );
@@ -356,6 +357,7 @@ class OfferEngine {
       cityName: o.city,
       benefits: health,
       commuteCostAnnual: commute,
+      ptoDays: o.ptoDays,
     );
 
     // ── Premium wealth metrics ────────────────────────────────────────────────

@@ -679,7 +679,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     final params = _HistoryCompPdfParams(
       comp: comp,
       isEs: isEs,
-      now: DateFormat('MMM d, yyyy').format(DateTime.now()),
+      now: DateFormat('MMM d, yyyy', isEs ? 'es' : 'en').format(DateTime.now()),
     );
     final pdfBytes =
         await Isolate.run(() => _buildHistoryComparisonPdf(params));
@@ -697,7 +697,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     final jobTitle = row['job_title'] as String? ?? '';
     final params = _HistorySinglePdfParams(
       isEs: isEs,
-      now: DateFormat('MMM d, yyyy').format(DateTime.now()),
+      now: DateFormat('MMM d, yyyy', isEs ? 'es' : 'en').format(DateTime.now()),
       jobTitle: jobTitle,
       company: row['company'] as String? ?? '',
       salary: (row['salary'] as num?)?.toDouble() ?? 0.0,
@@ -824,7 +824,7 @@ class _ComparisonBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pctFmt = NumberFormat('0.0#', 'en_US');
-    final dateFmt = DateFormat('MMM d, yyyy – HH:mm');
+    final dateFmt = DateFormat('MMM d, yyyy – HH:mm', isEs ? 'es' : 'en');
     final ct = CalcwiseTheme.of(context);
 
     final offers = (comp['offers'] as List).cast<Map<String, dynamic>>();
@@ -1437,7 +1437,7 @@ class _LegacyBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pctFmt = NumberFormat('0.0#', 'en_US');
-    final dateFmt = DateFormat('MMM d, yyyy – HH:mm');
+    final dateFmt = DateFormat('MMM d, yyyy – HH:mm', isEs ? 'es' : 'en');
     final ct = CalcwiseTheme.of(context);
 
     final jobTitle = row['job_title'] as String? ?? '';
