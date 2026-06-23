@@ -253,28 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showPaywall() {
-    final isSp = isSpanishNotifier.value;
-    AnalyticsService.instance.logPaywallViewed('hard_gate_offer_c');
-    AnalyticsService.instance.logPaywallShown('hard');
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => PaywallHard(
-        isSpanish: isSp,
-        onPurchase: () async {
-          Navigator.pop(context);
-          AnalyticsService.instance.logPaywallConverted('hard_gate_offer_c');
-          IAPService.instance.buy();
-          // _compare() not called here — premium status updates asynchronously.
-          // After purchase completes, freemium notifier rebuilds UI and user re-taps Compare.
-        },
-        onDismiss: () {
-          AnalyticsService.instance.logPaywallDismissed();
-          Navigator.pop(context);
-        },
-      ),
-    );
+    PaywallHard.show(context);
   }
 
   @override
@@ -287,9 +266,14 @@ class _HomeScreenState extends State<HomeScreen> {
       systemNavigationBarIconBrightness:
           isDark ? Brightness.light : Brightness.dark,
     ));
-    return ValueListenableBuilder<bool>(
-      valueListenable: isSpanishNotifier,
-      builder: (_, isSp, __) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        isSpanishNotifier,
+        freemiumService.isRewardedNotifier,
+        freemiumService.hasFullAccessNotifier,
+      ]),
+      builder: (_, __) {
+        final isSp = isSpanishNotifier.value;
         final canSave = _canCompare &&
             (freemiumService.hasFullAccess || freemiumService.isRewarded);
         final screens = [

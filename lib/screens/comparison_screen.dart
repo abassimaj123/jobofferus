@@ -681,7 +681,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     final params = _ComparisonPdfParams(
       pdfTitle: s.pdfTitle,
       generated: s.generated,
-      dateLabel: DateFormat('MMM d, yyyy').format(DateTime.now()),
+      dateLabel: DateFormat('MMM d, yyyy', isSpanish ? 'es' : 'en').format(DateTime.now()),
       winnerLabel: winnerLabel,
       isTie: widget.result.isTie,
       advantage: AmountFormatter.ui(widget.result.annualAdvantage, 'USD'),
@@ -820,26 +820,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   void _showPaywall(BuildContext context, bool isSpanish) {
-    AnalyticsService.instance.logPaywallViewed('comparison_history_limit');
-    AnalyticsService.instance.logPaywallShown('hard');
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => PaywallHard(
-        isSpanish: isSpanish,
-        onPurchase: () async {
-          Navigator.pop(context);
-          AnalyticsService.instance
-              .logPaywallConverted('comparison_history_limit');
-          IAPService.instance.buy();
-        },
-        onDismiss: () {
-          AnalyticsService.instance.logPaywallDismissed();
-          Navigator.pop(context);
-        },
-      ),
-    );
+    PaywallHard.show(context);
   }
 
   /// Save the current comparison as a pinned scenario via SmartHistory.

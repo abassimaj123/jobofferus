@@ -72,19 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _Tile(
                             icon: Icons.workspace_premium_rounded,
                             label: s.getPremium,
-                            onTap: () => showModalBottomSheet(
-                              context: ctx,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (_) => PaywallHard(
-                                isSpanish: isSp,
-                                onPurchase: () async {
-                                  Navigator.pop(ctx);
-                                  IAPService.instance.buy();
-                                },
-                                onDismiss: () => Navigator.pop(ctx),
-                              ),
-                            ),
+                            onTap: () => PaywallHard.show(ctx),
                           ),
                           const Divider(height: 1),
                           _Tile(

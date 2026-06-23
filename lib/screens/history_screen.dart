@@ -5,6 +5,7 @@ import 'package:calcwise_core/calcwise_core.dart';
 import '../core/db/database_helper.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/freemium/iap_service.dart';
+import '../widgets/paywall_hard.dart';
 import '../core/language/language_notifier.dart';
 import '../core/theme/app_theme.dart';
 import '../core/services/analytics_service.dart';
@@ -29,7 +30,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _firstLoad = true;
 
-  final _fmtDate = DateFormat('MMM d, yyyy');
+  final _fmtDate =
+      DateFormat('MMM d, yyyy', isSpanishNotifier.value ? 'es' : 'en');
 
   @override
   void initState() {
@@ -238,7 +240,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Expanded(
                 child: _firstLoad
                     ? const _HistorySkeleton()
-                    : RefreshIndicator(
+                    : ListenableBuilder(
+                        listenable: freemiumService.isRewardedNotifier,
+                        builder: (context, _) => RefreshIndicator(
                         onRefresh: _load,
                         child: CustomScrollView(
                           slivers: [
@@ -315,7 +319,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 child: SizedBox(height: 80)),
                           ],
                         ),
-                      ),
+                      )),
               ),
             ],
           ),
@@ -332,14 +336,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
-      child: ValueListenableBuilder<bool>(
-        valueListenable: freemiumService.hasFullAccessNotifier,
-        builder: (context, isPremium, _) {
+      child: ListenableBuilder(
+        listenable: Listenable.merge([
+          freemiumService.hasFullAccessNotifier,
+          freemiumService.isRewardedNotifier,
+        ]),
+        builder: (context, _) {
+          final isPremium = freemiumService.hasFullAccess;
+          final hasAccess = isPremium || freemiumService.isRewarded;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isPremium
+                hasAccess
                     ? '${_history.length} ${s.saved}'
                     : '${_autoSaves.length} / ${MonetizationConfig.freeRingBufferSize} ${s.saved}',
                 style: TextStyle(
@@ -347,7 +356,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   fontSize: AppTextSize.md,
                 ),
               ),
-              if (!isPremium) ...[
+              if (!hasAccess) ...[
                 const SizedBox(height: AppSpacing.xs),
                 Row(children: [
                   const Icon(Icons.lock_outline,
@@ -364,7 +373,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => IAPService.instance.buy(),
+                    onPressed: () {
+                      AnalyticsService.instance.logPaywallShown('hard');
+                      PaywallHard.show(context);
+                    },
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: Text(
                       s.unlock,
