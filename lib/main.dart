@@ -16,6 +16,7 @@ import 'package:calcwise_core/calcwise_core.dart'
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -56,6 +57,7 @@ final smartHistoryService = SmartHistoryService(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await CalcwiseTax.init(remoteFetcher: calcwiseTaxRemoteFetch);
   await CalcwiseRemoteConfig.initialize();
@@ -78,6 +80,7 @@ void main() async {
   await freemiumService.initialize();
   await paywallSession.initialize();
   await IAPService.instance.initialize();
+  unawaited(AnalyticsService.instance.initialize());
   await AnalyticsService.instance.logAppOpen();
   AnalyticsService.instance.setUserPremium(freemiumService.hasFullAccess);
   await themeModeService.initialize();
@@ -94,6 +97,7 @@ void main() async {
   CalcwiseAdFooter.configure(
     adService: adService,
     freemium: freemiumService,
+    isSpanishNotifier: isSpanishNotifier,
     onGetPremium: () => IAPService.instance.buy(),
     analytics: AnalyticsService.instance,
   );
