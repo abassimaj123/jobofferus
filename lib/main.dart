@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -132,6 +133,7 @@ class JobOfferApp extends StatelessWidget {
         builder: (_, themeMode, __) => MaterialApp(
           title: isSpanish ? const AppStringsEs().appTitle : const AppStringsEn().appTitle,
           debugShowCheckedModeBanner: false,
+          navigatorObservers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
           builder: (context, child) {
             if (!MediaQuery.of(context).disableAnimations) return child!;
             return Theme(
