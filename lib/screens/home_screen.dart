@@ -152,11 +152,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onPremiumChange() {
     final now = freemiumService.hasFullAccess;
-    unawaited(AnalyticsService.instance.setUserPremium(now));
     if (now && !_wasPremium && mounted) {
       showPremiumWelcomeSnackBar(context, isSpanish: isSpanishNotifier.value);
+      try { AnalyticsService.instance.logPaywallConverted('iap'); } catch (_) {}
     }
     _wasPremium = now;
+    unawaited(AnalyticsService.instance.setUserPremium(now));
   }
 
   void _onIapError() {
