@@ -28,6 +28,8 @@ import 'core/freemium/iap_service.dart';
 import 'core/db/job_offer_us_database_adapter.dart';
 import 'core/ads/ad_config.dart';
 import 'core/services/analytics_service.dart';
+import 'widgets/paywall_hard.dart';
+import 'widgets/paywall_soft.dart';
 import 'core/language/language_notifier.dart';
 import 'core/services/deadline_notification_service.dart';
 import 'core/theme/app_theme.dart';
@@ -117,7 +119,8 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));
-
+  PaywallHard.setAnalytics(AnalyticsService.instance);
+  PaywallSoft.setAnalytics(AnalyticsService.instance);
   runApp(const JobOfferApp());
 }
 
