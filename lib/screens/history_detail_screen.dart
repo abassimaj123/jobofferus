@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:calcwise_core/calcwise_core.dart';
 import 'package:path_provider/path_provider.dart';
@@ -653,6 +654,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
 
   // ── PDF Export ───────────────────────────────────────────────────────────────
   Future<void> _exportPdf(bool isEs) async {
+    HapticFeedback.mediumImpact();
     setState(() => _exporting = true);
     try {
       final comp = _compJson;
