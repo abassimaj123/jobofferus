@@ -875,7 +875,10 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
       if (!mounted) return;
       setState(() => _saved = true);
-      paywallSession.recordAction().ignore();
+      final trigger = await paywallSession.recordAction();
+      if (!mounted) return;
+      if (trigger == PaywallTrigger.soft) PaywallSoft.show(context);
+      if (trigger == PaywallTrigger.hard) PaywallHard.show(context);
     } catch (_) {
       if (!mounted) return;
       final ss = isSpanish ? const AppStringsEs() : const AppStringsEn();
