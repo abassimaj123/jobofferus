@@ -323,6 +323,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       )),
               ),
+              const CalcwiseAdFooter(),
             ],
           ),
           ),
