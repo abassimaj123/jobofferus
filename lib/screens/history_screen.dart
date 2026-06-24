@@ -632,6 +632,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       confirmDismiss: (_) => _confirmDelete(context, isEs),
       onDismissed: (_) async {
         await DatabaseHelper.instance.deleteHistory(id);
+        if (!mounted) return;
         await _load();
       },
       background: Container(
