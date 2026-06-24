@@ -883,15 +883,19 @@ class _DeadlineRow extends StatelessWidget {
         ),
       ),
       if (deadline != null)
-        InkWell(
-          onTap: () => onDeadlineChanged(null),
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              child: Center(
-                child: Icon(Icons.close_rounded, size: 16, color: ct.textSecondary),
+        Semantics(
+          label: 'Clear deadline',
+          button: true,
+          child: InkWell(
+            onTap: () => onDeadlineChanged(null),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xs),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                child: Center(
+                  child: Icon(Icons.close_rounded, size: 16, color: ct.textSecondary),
+                ),
               ),
             ),
           ),
