@@ -1186,7 +1186,7 @@ class _OfferSummaryCard extends StatelessWidget {
             width: isWinner ? 2 : 1),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
               blurRadius: 6,
               offset: const Offset(0, 2)),
         ],
