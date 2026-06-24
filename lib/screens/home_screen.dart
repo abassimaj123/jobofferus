@@ -227,6 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'salary_b': _offerB.baseSalary.round(),
     });
     AnalyticsService.instance.logOfferCompared();
+    adService.onAction();
     final offerCForCompare = _showOfferC ? _offerC : null;
     final result = OfferEngine.compare(_offerA, _offerB, offerCForCompare);
     smartHistoryService.scheduleAutoSave(
