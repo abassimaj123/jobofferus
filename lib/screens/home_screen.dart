@@ -460,7 +460,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           onPremium: () {
-            AnalyticsService.instance.logPaywallShown('hard');
             PaywallHard.show(context);
           },
         ),

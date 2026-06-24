@@ -1084,7 +1084,6 @@ class _ComparisonBody extends StatelessWidget {
                         ? null
                         : () {
                             if (!isPrem) {
-                              AnalyticsService.instance.logPaywallShown('hard');
                               PaywallHard.show(context);
                               return;
                             }
@@ -1503,7 +1502,6 @@ class _LegacyBody extends StatelessWidget {
                       ? null
                       : () {
                           if (!isPremium) {
-                            AnalyticsService.instance.logPaywallShown('hard');
                             PaywallHard.show(context);
                             return;
                           }

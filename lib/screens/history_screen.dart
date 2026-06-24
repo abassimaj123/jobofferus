@@ -375,7 +375,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      AnalyticsService.instance.logPaywallShown('hard');
                       PaywallHard.show(context);
                     },
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
