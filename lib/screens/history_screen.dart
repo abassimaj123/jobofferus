@@ -85,6 +85,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (confirm == true) {
       try {
         await DatabaseHelper.instance.deleteHistory(id);
+        if (!mounted) return;
         _load();
       } catch (_) {
         if (!context.mounted) return;
@@ -102,6 +103,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _unpin(int id) async {
     HapticFeedback.selectionClick();
     await smartHistoryService.unpin(id);
+    if (!mounted) return;
     _load();
   }
 
@@ -192,6 +194,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (confirm == true) {
       try {
         await DatabaseHelper.instance.clearHistory();
+        if (!mounted) return;
         _load();
       } catch (_) {
         if (!context.mounted) return;
