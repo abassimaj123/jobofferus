@@ -154,6 +154,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
         title: Text(s.parseOfferLetter),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
+          tooltip: _isSp ? 'Cerrar' : 'Close',
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
