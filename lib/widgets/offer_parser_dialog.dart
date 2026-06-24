@@ -66,7 +66,7 @@ class _OfferParserDialogState extends State<OfferParserDialog> {
   }
 
   Future<void> _parse() async {
-    HapticFeedback.lightImpact();
+    HapticFeedback.mediumImpact();
     setState(() {
       _busy = true;
       _error = null;

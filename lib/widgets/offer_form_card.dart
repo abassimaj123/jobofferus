@@ -535,7 +535,7 @@ class _OfferFormCardState extends State<OfferFormCard>
   }
 
   void _openParser() {
-    HapticFeedback.lightImpact();
+    HapticFeedback.mediumImpact();
     Navigator.of(context).push(MaterialPageRoute(
       fullscreenDialog: true,
       builder: (_) => OfferParserDialog(

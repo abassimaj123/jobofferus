@@ -753,7 +753,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   void _showExportSheet(BuildContext context, bool isSpanish, bool isPremium) {
-    HapticFeedback.lightImpact();
+    HapticFeedback.mediumImpact();
     final ct = CalcwiseTheme.of(context);
     final s = isSpanish ? const AppStringsEs() : const AppStringsEn();
     showModalBottomSheet<void>(
@@ -1292,7 +1292,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           if (isPremium)
             OutlinedButton.icon(
               onPressed: () {
-                HapticFeedback.lightImpact();
+                HapticFeedback.mediumImpact();
                 _exportPdf(isSpanish);
               },
               icon: const Icon(Icons.picture_as_pdf_rounded),
