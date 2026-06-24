@@ -1074,7 +1074,7 @@ class _DeadlineHeaderBadge extends StatelessWidget {
       badgeColor = AppTheme.warningOrange;
       label = '$daysLeft days left';
     } else {
-      badgeColor = Colors.white;
+      badgeColor = Theme.of(context).colorScheme.onSurface;
       label = _fmtDate(deadline);
     }
 
