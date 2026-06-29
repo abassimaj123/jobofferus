@@ -2186,7 +2186,7 @@ class _BreakEvenCard extends StatelessWidget {
         Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text(duration,
               style: const TextStyle(
-                  fontSize: 32,
+                  fontSize: AppTextSize.displayLg,
                   fontWeight: FontWeight.w900,
                   color: AppTheme.primary,
                   letterSpacing: -1)),
