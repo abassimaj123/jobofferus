@@ -86,9 +86,10 @@ void main() {
       expect(OfferEngine.stateTax(100000, 'FL'), equals(0.0));
     });
 
-    test('CA — high tax state (>9% top bracket)', () {
+    test('CA — high tax state (~\$9.9k on \$150k, single 2026)', () {
+      // Registry: (150000 - 5540 BPA) across CA bands = 9873.42
       final tax = OfferEngine.stateTax(150000, 'CA');
-      expect(tax, greaterThan(10000)); // should be >10k on 150k
+      expect(tax, closeTo(9873.42, 1));
     });
 
     test('IL — flat 4.95% rate', () {

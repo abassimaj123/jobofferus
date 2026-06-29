@@ -1,8 +1,6 @@
-import 'package:calcwise_core/calcwise_core.dart'
-    show CalcwiseTax, taxOnIncome;
+import 'package:calcwise_core/calcwise_core.dart' show CalcwiseTax;
 import '../models/job_offer.dart';
 import '../models/comparison_result.dart';
-import '../data/state_tax_data.dart';
 import '../data/city_col_data.dart';
 import '../data/local_taxes.dart';
 
@@ -30,9 +28,24 @@ class OfferEngine {
     return ss + medicare + addlMedicare;
   }
 
-  /// State income tax for [stateCode].
-  static double stateTax(double grossIncome, String stateCode) =>
-      StateTaxData.calculate(grossIncome, stateCode);
+  /// State income tax for [stateCode] (single filer, 2026).
+  ///
+  /// Bands + state standard deduction are sourced from the CalcwiseTax registry
+  /// (jurisdiction `us_<postal>`), the single verified source of truth shared
+  /// across the portfolio — remote-updatable, never degrades below the baked
+  /// floor. `.taxOn` applies the state standard deduction then the marginal
+  /// bands. Unknown / no-tax states resolve to 0 naturally.
+  ///
+  /// NOTE: registry state data is single-filer only. Joint-filer (MFJ) state
+  /// brackets are not yet modelled — see registry `byStatus` for the federal
+  /// pattern when MFJ state tables are populated.
+  static double stateTax(double grossIncome, String stateCode) {
+    final code = stateCode.trim();
+    if (code.isEmpty) return 0.0;
+    return CalcwiseTax.registry
+            .incomeTax('us_${code.toLowerCase()}', 2026, grossIncome) ??
+        0.0;
+  }
 
   /// Local/city income tax for [cityName].
   static double localTax(double grossIncome, String cityName) =>

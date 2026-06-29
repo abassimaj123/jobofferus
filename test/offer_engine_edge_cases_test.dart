@@ -9,30 +9,36 @@ import 'package:jobofferus/core/data/city_col_data.dart';
 
 void main() {
   // ── State tax edge cases ───────────────────────────────────────────────────
-  group('StateTaxData — boundary values', () {
-    test('AZ flat 2.5% rate', () {
-      expect(StateTaxData.calculate(100000, 'AZ'), closeTo(2500, 50));
+  // State tax now reads the CalcwiseTax registry (us_<postal>, 2026, single
+  // filer). `.taxOn` applies the state standard deduction (BPA) then bands, so
+  // goldens are recomputed from the verified registry — the source of truth.
+  group('State tax (CalcwiseTax registry) — boundary values', () {
+    test('AZ flat 2.5% above \$8,350 std deduction', () {
+      // (100000 - 8350) * 0.025 = 2291.25
+      expect(OfferEngine.stateTax(100000, 'AZ'), closeTo(2291.25, 1));
     });
 
     test('HI top bracket 11% — highest in the US', () {
-      final tax = StateTaxData.calculate(500000, 'HI');
-      // At $500k, effective rate ~9.88% (top marginal 11%, large lower brackets pull it down)
-      expect(tax / 500000, greaterThan(0.09));
-      // But also confirm marginal rate on very high income approaches 11%
+      final tax = OfferEngine.stateTax(500000, 'HI');
+      // (500000 - 4400 BPA) across HI's 12 bands = 44732.20 → eff ~8.95%.
+      expect(tax / 500000, greaterThan(0.085));
+      // Confirm the steep top brackets push absolute tax well past $40k.
       expect(tax, greaterThan(40000));
     });
 
-    test('IL flat 4.95%', () {
-      expect(StateTaxData.calculate(75000, 'IL'), closeTo(3712.5, 10));
+    test('IL flat 4.95% (no std deduction in registry)', () {
+      // 75000 * 0.0495 = 3712.5
+      expect(OfferEngine.stateTax(75000, 'IL'), closeTo(3712.5, 1));
     });
 
-    test('PA flat 3.07%', () {
-      expect(StateTaxData.calculate(55000, 'PA'), closeTo(1688.5, 10));
+    test('PA flat 3.07% (no std deduction in registry)', () {
+      // 55000 * 0.0307 = 1688.5
+      expect(OfferEngine.stateTax(55000, 'PA'), closeTo(1688.5, 1));
     });
 
     test('All no-tax states return 0', () {
       for (final s in ['AK', 'FL', 'NV', 'NH', 'SD', 'TN', 'TX', 'WA', 'WY']) {
-        expect(StateTaxData.calculate(100000, s), equals(0.0),
+        expect(OfferEngine.stateTax(100000, s), equals(0.0),
             reason: '$s should have 0 state tax');
       }
     });
@@ -49,8 +55,8 @@ void main() {
     });
 
     test('CA progressive: \$50k has lower effective rate than \$500k', () {
-      final r50k = StateTaxData.calculate(50000, 'CA') / 50000;
-      final r500k = StateTaxData.calculate(500000, 'CA') / 500000;
+      final r50k = OfferEngine.stateTax(50000, 'CA') / 50000;
+      final r500k = OfferEngine.stateTax(500000, 'CA') / 500000;
       expect(r500k, greaterThan(r50k));
     });
   });
