@@ -19,7 +19,7 @@ class OfferEngine {
   /// Federal income tax (single filer, 2025). Brackets + standard deduction
   /// sourced from CalcwiseTax registry — remote-updatable, never degrades.
   static double federalTax(double grossIncome) =>
-      CalcwiseTax.registry.incomeTax('us_federal', 2025, grossIncome) ?? 0.0;
+      CalcwiseTax.registry.incomeTax('us_federal', 2026, grossIncome) ?? 0.0;
 
   /// FICA taxes: Social Security + Medicare + Additional Medicare.
   static double ficaTax(double grossIncome) {
