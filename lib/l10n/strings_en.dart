@@ -543,7 +543,7 @@ class AppStringsEn implements AppStrings {
   @override String get netInvestableWealth5Yr => 'Net Investable Wealth — 5 Years';
   @override String get savings20Pct6PctReturn => '20% savings rate · 6% annual return';
   @override String get wealthDisclaimer =>
-      '* Projections are estimates based on 2025 rates. Actual returns may vary.';
+      '* Projections are estimates based on 2026 rates. Actual returns may vary.';
 
   // ── Projection ────────────────────────────────────────────────────────────────
   @override String get projection5Year => '5-Year Projection';

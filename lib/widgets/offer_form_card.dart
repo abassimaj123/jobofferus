@@ -234,7 +234,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                       ),
                     if (widget.value.deadline != null) ...[
                       const SizedBox(height: 4),
-                      _DeadlineHeaderBadge(deadline: widget.value.deadline!),
+                      _DeadlineHeaderBadge(deadline: widget.value.deadline!, isSpanish: widget.isSpanish),
                     ],
                   ],
                 )),
@@ -398,7 +398,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                       Expanded(
                           child: _tf(
                               ctrl: _match,
-                              label: '401k match (%)',
+                              label: widget.isSpanish ? 'Match 401k (%)' : '401k match (%)',
                               hint: '100',
                               suffix: '%',
                               num: true,
@@ -884,7 +884,7 @@ class _DeadlineRow extends StatelessWidget {
       ),
       if (deadline != null)
         Semantics(
-          label: 'Clear deadline',
+          label: isSpanish ? 'Borrar fecha límite' : 'Clear deadline',
           button: true,
           child: InkWell(
             onTap: () => onDeadlineChanged(null),
@@ -977,22 +977,10 @@ class _DeadlineChip extends StatelessWidget {
     );
   }
 
-  static String _fmtDate(DateTime d) {
-    const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
+  String _fmtDate(DateTime d) {
+    const monthsEn = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthsEs = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    final months = isSpanish ? monthsEs : monthsEn;
     return '${months[d.month]} ${d.day}';
   }
 }
@@ -1060,7 +1048,8 @@ class _BenchmarkChip extends StatelessWidget {
 
 class _DeadlineHeaderBadge extends StatelessWidget {
   final DateTime deadline;
-  const _DeadlineHeaderBadge({required this.deadline});
+  final bool isSpanish;
+  const _DeadlineHeaderBadge({required this.deadline, required this.isSpanish});
 
   @override
   Widget build(BuildContext context) {
@@ -1071,12 +1060,13 @@ class _DeadlineHeaderBadge extends StatelessWidget {
     final Color badgeColor;
     final String label;
 
+    final dayStr = isSpanish ? const AppStringsEs().daysLeft : const AppStringsEn().daysLeft;
     if (daysLeft <= 3) {
       badgeColor = AppTheme.errorRed;
-      label = '$daysLeft days left';
+      label = '$daysLeft $dayStr';
     } else if (daysLeft <= 14) {
       badgeColor = AppTheme.warningOrange;
-      label = '$daysLeft days left';
+      label = '$daysLeft $dayStr';
     } else {
       badgeColor = Theme.of(context).colorScheme.onSurface;
       label = _fmtDate(deadline);
@@ -1106,22 +1096,10 @@ class _DeadlineHeaderBadge extends StatelessWidget {
     );
   }
 
-  static String _fmtDate(DateTime d) {
-    const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
+  String _fmtDate(DateTime d) {
+    const monthsEn = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthsEs = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    final months = isSpanish ? monthsEs : monthsEn;
     return '${months[d.month]} ${d.day}';
   }
 }

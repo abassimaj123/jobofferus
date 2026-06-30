@@ -820,6 +820,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   void _showPaywall(BuildContext context, bool isSpanish) {
+    AnalyticsService.instance.logPaywallShown('hard');
     PaywallHard.show(context);
   }
 

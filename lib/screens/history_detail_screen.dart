@@ -14,6 +14,7 @@ import '../core/theme/app_theme.dart';
 import '../core/language/language_notifier.dart';
 import '../core/freemium/freemium_service.dart';
 import '../core/services/analytics_service.dart';
+import '../main.dart' show paywallSession;
 import '../l10n/strings_en.dart';
 import '../l10n/strings_es.dart';
 
@@ -637,6 +638,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   void initState() {
     super.initState();
     AnalyticsService.instance.logScreenView('history_detail');
+    paywallSession.recordAction();
   }
 
   // ── Parse comparison JSON if present ────────────────────────────────────────

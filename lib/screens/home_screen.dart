@@ -355,7 +355,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               NavigationBar(
                 selectedIndex: _tabIndex,
-                onDestinationSelected: (i) => setState(() => _tabIndex = i),
+                onDestinationSelected: (i) async {
+                  setState(() => _tabIndex = i);
+                  final trigger = await paywallSession.recordAction();
+                  if (!mounted) return;
+                  if (trigger == PaywallTrigger.soft) PaywallSoft.show(context);
+                  if (trigger == PaywallTrigger.hard) PaywallHard.show(context);
+                },
                 destinations: [
                   NavigationDestination(
                     icon: const Icon(Icons.swap_horiz_rounded),
