@@ -820,7 +820,6 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   void _showPaywall(BuildContext context, bool isSpanish) {
-    AnalyticsService.instance.logPaywallShown('hard');
     PaywallHard.show(context);
   }
 
@@ -840,7 +839,6 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       if (pinnedCount >= MonetizationConfig.freePinnedLimit) {
         if (!mounted) return;
         final ss = isSpanish ? const AppStringsEs() : const AppStringsEn();
-        AnalyticsService.instance.logPaywallShown('soft');
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
