@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -51,10 +52,16 @@ class DeadlineNotificationService {
   ///  - 48 h before deadline
   ///  - On the deadline day at 09:00 local time
   ///
+  /// [offerSlot] is a stable per-offer identifier (e.g. 'A', 'B', 'C' for the
+  /// comparison slots) used — together with [offerLabel] — to derive the
+  /// notification ID. This prevents two offers that share the same
+  /// user-editable label from colliding and silently overwriting each
+  /// other's scheduled notifications.
+  ///
   /// Notification text is localised to EN or ES based on the saved
   /// language preference (`language` key in SharedPreferences).
   Future<void> scheduleDeadlineAlert(
-      String offerLabel, DateTime deadline) async {
+      String offerLabel, DateTime deadline, String offerSlot) async {
     if (!_initialized) await initialize();
 
     final prefs = await SharedPreferences.getInstance();
@@ -76,7 +83,7 @@ class DeadlineNotificationService {
           : '$offerLabel expires on ${_fmtEn(deadline)}';
       try {
         await _plugin.zonedSchedule(
-          _idFor(offerLabel, 48),
+          _idFor(offerSlot, offerLabel, 48),
           title48h,
           body48h,
           tzAlert48h,
@@ -100,7 +107,7 @@ class DeadlineNotificationService {
           : '$offerLabel deadline is today';
       try {
         await _plugin.zonedSchedule(
-          _idFor(offerLabel, 0),
+          _idFor(offerSlot, offerLabel, 0),
           titleToday,
           bodyToday,
           tzDayOf,
@@ -129,9 +136,16 @@ class DeadlineNotificationService {
         iOS: DarwinNotificationDetails(),
       );
 
-  /// Deterministic int ID from label + hours-offset.
-  static int _idFor(String label, int hoursOffset) =>
-      (label.hashCode.abs() % 100000) * 100 + hoursOffset;
+  /// Deterministic int ID from a stable per-offer slot (e.g. 'A'/'B'/'C') +
+  /// label + hours-offset. Including [slot] ensures two offers sharing the
+  /// same user-editable [label] never collide, while remaining deterministic
+  /// so re-scheduling the SAME offer replaces its own prior notification.
+  @visibleForTesting
+  static int idFor(String slot, String label, int hoursOffset) =>
+      (Object.hash(slot, label).abs() % 100000) * 100 + hoursOffset;
+
+  static int _idFor(String slot, String label, int hoursOffset) =>
+      idFor(slot, label, hoursOffset);
 
   /// English date format: "Jan 15, 2025"
   static String _fmtEn(DateTime d) =>

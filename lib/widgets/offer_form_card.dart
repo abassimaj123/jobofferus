@@ -298,6 +298,7 @@ class _OfferFormCardState extends State<OfferFormCard>
                               ? _offerLabel
                               : widget.value.label,
                           d,
+                          _letterBadge,
                         );
                       }
                     },
