@@ -8,8 +8,8 @@ import '../data/local_taxes.dart';
 class OfferEngine {
   OfferEngine._();
 
-  // ── FICA constants 2025 (SSA Notice 2024-80) ─────────────────────────────
-  static const double _ssWageBase = 176100.0;
+  // ── FICA constants 2026 (SSA Notice 2025-XX) ─────────────────────────────
+  static const double _ssWageBase = 184500.0;
   static const double _ssRate = 0.062;
   static const double _medicareRate = 0.0145;
   static const double _additionalMedicareRate = 0.009;
