@@ -33,3 +33,8 @@ flutter_*.log
 
 # Build debug symbols (binary, not for VCS)
 debug_symbols/
+
+# Signing — never commit
+android/key.properties
+*.jks
+*.keystore
