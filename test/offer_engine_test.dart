@@ -58,21 +58,21 @@ void main() {
       expect(OfferEngine.ficaTax(100000), closeTo(7650, 50));
     });
 
-    test('income above SS wage base (\$176100) — SS caps', () {
-      final atBase = OfferEngine.ficaTax(176100);
+    test('income above SS wage base (\$184500) — SS caps', () {
+      final atBase = OfferEngine.ficaTax(184500);
       final aboveBase = OfferEngine.ficaTax(200000);
       // SS should be the same; only Medicare increases
       final diff = aboveBase - atBase;
-      expect(diff, closeTo((200000 - 176100) * 0.0145, 5));
+      expect(diff, closeTo((200000 - 184500) * 0.0145, 5));
     });
 
     test('\$250k income — additional Medicare (0.9%) kicks in', () {
       final fica = OfferEngine.ficaTax(250000);
-      // SS: 176100*0.062 = 10918.2
+      // SS: 184500*0.062 = 11439
       // Medicare: 250000*0.0145 = 3625
       // Addl: (250000-200000)*0.009 = 450
-      // Total ≈ 14993.2
-      expect(fica, closeTo(14993, 50));
+      // Total ≈ 15514
+      expect(fica, closeTo(15514, 50));
     });
   });
 

@@ -1,7 +1,7 @@
 // Golden reference tests — JobOfferUS
 // Focus: FICA 3-layer formula + netTakeHome by state + k401k/PTO valuation
-// SS wage base $176,100 for 2025 (SSA Notice 2024-80)
-// Sources: SSA Notice 2024-80, IRS Rev. Proc. 2024-40, state tax references.
+// SS wage base $184,500 for 2026 (SSA Notice 2025 wage base projection)
+// Sources: SSA wage base 2026, IRS Rev. Proc. 2024-40, state tax references.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jobofferus/core/engines/offer_engine.dart';
@@ -14,21 +14,21 @@ void main() {
 
   // ── ficaTax — 2025 constants ──────────────────────────────────────────────
 
-  group('OfferEngine.ficaTax — 2025 constants (SSA Notice 2024-80)', () {
+  group('OfferEngine.ficaTax — 2026 constants (SS wage base \$184,500)', () {
     test('JO-G1: \$80k → SS \$4,960 + Medicare \$1,160 = \$6,120', () {
       approx(OfferEngine.ficaTax(80000), 6120, tol: 0.01);
     });
 
-    test('JO-G2: at SS wage base \$176,100 → \$13,471.65', () {
+    test('JO-G2: below SS wage base \$184,500 → SS + Medicare only', () {
       approx(OfferEngine.ficaTax(176100), 13471.65, tol: 0.01);
     });
 
-    test('JO-G3: \$250k → SS capped + Medicare + Additional Medicare = \$14,993.20', () {
-      approx(OfferEngine.ficaTax(250000), 14993.20, tol: 0.01);
+    test('JO-G3: \$250k → SS capped at \$184,500 + Medicare + Additional Medicare = \$15,514.00', () {
+      approx(OfferEngine.ficaTax(250000), 15514.00, tol: 0.01);
     });
 
-    test('JO-G4: \$200k exactly → \$13,818.20 (Additional Medicare threshold is exclusive)', () {
-      approx(OfferEngine.ficaTax(200000), 13818.20, tol: 0.01);
+    test('JO-G4: \$200k exactly → \$14,339.00 (Additional Medicare threshold is exclusive)', () {
+      approx(OfferEngine.ficaTax(200000), 14339.00, tol: 0.01);
     });
 
     test('JO-G5: above SS base → each extra \$1 adds only Medicare + Additional', () {

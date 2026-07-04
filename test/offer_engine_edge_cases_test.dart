@@ -127,14 +127,13 @@ void main() {
 
   // ── FICA SS cap ────────────────────────────────────────────────────────────
   group('ficaTax — SS wage base cap', () {
-    test('SS contribution caps at \$176100 wage base', () {
+    test('SS contribution caps at \$184500 wage base', () {
       final at = OfferEngine.ficaTax(176100);
       final above = OfferEngine.ficaTax(176100 + 50000); // = 226100
-      // SS: capped — no extra SS (0)
-      // Medicare on 50k: 50000 * 0.0145 = 725
-      // Additional Medicare: 26100 (= 226100 - 200000) * 0.009 = 234.9
-      // Total diff ≈ 959.9
-      expect(above - at, closeTo(959.9, 10));
+      // 176100 is below the $184,500 cap, so extra SS still accrues up to
+      // the cap, then only Medicare + Additional Medicare apply above it.
+      // Total diff ≈ 1480.7
+      expect(above - at, closeTo(1480.7, 10));
     });
 
     test('marginal FICA rate above SS base is just 1.45% (Medicare only)', () {
