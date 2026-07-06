@@ -89,6 +89,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Map<String, dynamic> _l2Snapshot() {
     final offerCActive = _showOfferC && _offerC.baseSalary > 0;
+    // Full input serialization — must mirror every JobOffer field that
+    // reaches OfferEngine.compare (see offer_engine.dart) so a saved
+    // scenario can be fully reconstructed. Keep in sync with
+    // comparison_screen.dart's offerJson().
     Map<String, dynamic> offerInputs(JobOffer o) => {
           'label': o.label,
           'company': o.company,
@@ -98,6 +102,17 @@ class _HomeScreenState extends State<HomeScreen> {
           'bonus_pct': o.bonusPct,
           'signing_bonus': o.signingBonus,
           'rsu': o.annualRsuValue,
+          'k401k_match_pct': o.k401kMatchPct,
+          'k401k_up_to_pct': o.k401kUpToPct,
+          'pto_days': o.ptoDays,
+          'health_insurance_savings': o.healthInsuranceSavings,
+          'dental_vision_savings': o.dentalVisionSavings,
+          'commute_miles': o.commuteMilesPerDay,
+          'is_remote': o.isRemote,
+          'annual_raise_pct': o.annualRaisePct,
+          'is_hourly': o.isHourly,
+          'hours_per_week': o.hoursPerWeek,
+          'deadline': o.deadline?.toIso8601String(),
         };
     final result = OfferEngine.compare(
       _offerA,
