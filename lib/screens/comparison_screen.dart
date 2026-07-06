@@ -58,17 +58,24 @@ class _ComparisonPdfParams {
   final String annualRsu;
   final String commuteCost;
   final String totalNetCompensation;
+  final String ptoValue;
+  final String colAdjustedTakeHome;
+  final String total5Years;
   final String pdfDisclaimer;
   // Values A
   final double grossA, netA, monthlyA, taxRateA, bonusAfterTaxA,
-      signingAfterTaxA, k401kA, healthA, rsuA, commuteA, totalCompA;
+      signingAfterTaxA, k401kA, healthA, rsuA, commuteA, totalCompA, ptoA;
   // Values B
   final double grossB, netB, monthlyB, taxRateB, bonusAfterTaxB,
-      signingAfterTaxB, k401kB, healthB, rsuB, commuteB, totalCompB;
+      signingAfterTaxB, k401kB, healthB, rsuB, commuteB, totalCompB, ptoB;
   // Values C (nullable)
   final double? grossC, netC, monthlyC, taxRateC, bonusAfterTaxC,
-      signingAfterTaxC, k401kC, healthC, rsuC, commuteC, totalCompC;
+      signingAfterTaxC, k401kC, healthC, rsuC, commuteC, totalCompC, ptoC;
+  // Premium: CoL-adjusted take-home and 5-year total comp (nullable — premium only)
+  final double? colAdjA, colAdjB, colAdjC;
+  final double? fiveYrTotalA, fiveYrTotalB, fiveYrTotalC;
   final bool showSigning;
+  final bool isPremium;
 
   const _ComparisonPdfParams({
     required this.pdfTitle,
@@ -94,6 +101,9 @@ class _ComparisonPdfParams {
     required this.annualRsu,
     required this.commuteCost,
     required this.totalNetCompensation,
+    required this.ptoValue,
+    required this.colAdjustedTakeHome,
+    required this.total5Years,
     required this.pdfDisclaimer,
     required this.grossA,
     required this.netA,
@@ -106,6 +116,7 @@ class _ComparisonPdfParams {
     required this.rsuA,
     required this.commuteA,
     required this.totalCompA,
+    required this.ptoA,
     required this.grossB,
     required this.netB,
     required this.monthlyB,
@@ -117,6 +128,7 @@ class _ComparisonPdfParams {
     required this.rsuB,
     required this.commuteB,
     required this.totalCompB,
+    required this.ptoB,
     this.grossC,
     this.netC,
     this.monthlyC,
@@ -128,7 +140,15 @@ class _ComparisonPdfParams {
     this.rsuC,
     this.commuteC,
     this.totalCompC,
+    this.ptoC,
+    this.colAdjA,
+    this.colAdjB,
+    this.colAdjC,
+    this.fiveYrTotalA,
+    this.fiveYrTotalB,
+    this.fiveYrTotalC,
     required this.showSigning,
+    required this.isPremium,
   });
 }
 
@@ -285,12 +305,23 @@ Future<Uint8List> _buildComparisonPdf(_ComparisonPdfParams p) async {
                 valC: p.hasC ? fmt(p.k401kC!) : null),
             row(p.healthBenefits, fmt(p.healthA), fmt(p.healthB),
                 valC: p.hasC ? fmt(p.healthC!) : null),
+            row(p.ptoValue, fmt(p.ptoA), fmt(p.ptoB),
+                valC: p.hasC ? fmt(p.ptoC!) : null),
             row(p.annualRsu, fmt(p.rsuA), fmt(p.rsuB),
                 valC: p.hasC ? fmt(p.rsuC!) : null),
             row(p.commuteCost, fmt(p.commuteA), fmt(p.commuteB),
                 valC: p.hasC ? fmt(p.commuteC!) : null),
             row(p.totalNetCompensation, fmt(p.totalCompA), fmt(p.totalCompB),
                 bold: true, valC: p.hasC ? fmt(p.totalCompC!) : null),
+            if (p.isPremium && p.colAdjA != null && p.colAdjB != null)
+              row(p.colAdjustedTakeHome, fmt(p.colAdjA!), fmt(p.colAdjB!),
+                  valC: p.hasC && p.colAdjC != null ? fmt(p.colAdjC!) : null),
+            if (p.isPremium && p.fiveYrTotalA != null && p.fiveYrTotalB != null)
+              row(p.total5Years, fmt(p.fiveYrTotalA!), fmt(p.fiveYrTotalB!),
+                  bold: true,
+                  valC: p.hasC && p.fiveYrTotalC != null
+                      ? fmt(p.fiveYrTotalC!)
+                      : null),
           ],
         ),
         pw.SizedBox(height: 20),
@@ -707,6 +738,9 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       annualRsu: s.annualRsu,
       commuteCost: s.commuteCost,
       totalNetCompensation: s.totalNetCompensation,
+      ptoValue: s.ptoValue,
+      colAdjustedTakeHome: s.colAdjustedTakeHome,
+      total5Years: s.total5Years,
       pdfDisclaimer: s.pdfDisclaimer,
       grossA: a.grossSalary,
       netA: a.netTakeHome,
@@ -719,6 +753,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       rsuA: a.annualRsuValue,
       commuteA: a.commuteCost,
       totalCompA: a.totalCompensation,
+      ptoA: a.ptoValue,
       grossB: b.grossSalary,
       netB: b.netTakeHome,
       monthlyB: b.monthlyTakeHome,
@@ -730,6 +765,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       rsuB: b.annualRsuValue,
       commuteB: b.commuteCost,
       totalCompB: b.totalCompensation,
+      ptoB: b.ptoValue,
       grossC: c?.grossSalary,
       netC: c?.netTakeHome,
       monthlyC: c?.monthlyTakeHome,
@@ -741,9 +777,19 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       rsuC: c?.annualRsuValue,
       commuteC: c?.commuteCost,
       totalCompC: c?.totalCompensation,
+      ptoC: c?.ptoValue,
+      colAdjA: a.colAdjustedTakeHome,
+      colAdjB: b.colAdjustedTakeHome,
+      colAdjC: c?.colAdjustedTakeHome,
+      fiveYrTotalA: a.fiveYearProjection.isNotEmpty ? a.cumulativeComp5Yr : null,
+      fiveYrTotalB: b.fiveYearProjection.isNotEmpty ? b.cumulativeComp5Yr : null,
+      fiveYrTotalC: c != null && c.fiveYearProjection.isNotEmpty
+          ? c.cumulativeComp5Yr
+          : null,
       showSigning: a.signingBonusAfterTax > 0 ||
           b.signingBonusAfterTax > 0 ||
           (c?.signingBonusAfterTax ?? 0) > 0,
+      isPremium: freemiumService.hasFullAccess,
     );
 
     final pdfBytes = await Isolate.run(() => _buildComparisonPdf(params));
