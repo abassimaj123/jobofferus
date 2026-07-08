@@ -279,7 +279,10 @@ class _HomeScreenState extends State<HomeScreen> {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-      systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
+      // Transparent — the app draws under the system nav bar
+      // (edge-to-edge) instead of painting it opaque, per Android 15's
+      // forced behavior.
+      systemNavigationBarColor: Colors.transparent,
       systemNavigationBarIconBrightness:
           isDark ? Brightness.light : Brightness.dark,
     ));

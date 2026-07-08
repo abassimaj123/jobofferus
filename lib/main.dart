@@ -62,6 +62,9 @@ final smartHistoryService = SmartHistoryService(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Android 15+ (API 35) forces edge-to-edge; draw under transparent system
+  // bars ourselves instead of painting them opaque (deprecated pattern).
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   await initializeDateFormatting('en_US', null);
   await initializeDateFormatting('es_US', null);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
