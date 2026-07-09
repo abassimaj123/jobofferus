@@ -70,6 +70,12 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await CalcwiseTax.init(remoteFetcher: calcwiseTaxRemoteFetch);
   await CalcwiseRemoteConfig.initialize();
+  // Debug builds must not report to the same Crashlytics project as
+  // production — testing on-device would otherwise pollute the live
+  // crash dashboard alongside real user reports.
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+    !kDebugMode,
+  );
   FlutterError.onError = (FlutterErrorDetails details) {
     if (details.exceptionAsString().contains('RenderFlex overflowed')) return;
     FirebaseCrashlytics.instance.recordFlutterFatalError(details);
