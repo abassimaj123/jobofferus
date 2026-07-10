@@ -871,7 +871,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   }
 
   void _showPaywall(BuildContext context, bool isSpanish) {
-    PaywallHard.show(context);
+    PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
   }
 
   /// Save the current comparison as a pinned scenario via SmartHistory.
@@ -927,8 +927,8 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
       setState(() => _saved = true);
       final trigger = await paywallSession.recordAction();
       if (!mounted) return;
-      if (trigger == PaywallTrigger.soft) PaywallSoft.show(context);
-      if (trigger == PaywallTrigger.hard) PaywallHard.show(context);
+      if (trigger == PaywallTrigger.soft) PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
+      if (trigger == PaywallTrigger.hard) PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
     } catch (_) {
       if (!mounted) return;
       final ss = isSpanish ? const AppStringsEs() : const AppStringsEn();

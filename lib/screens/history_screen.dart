@@ -240,10 +240,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ],
           ),
           body: CalcwisePageEntrance(
-            child: Column(
-            children: [
-              Expanded(
-                child: _firstLoad
+            // No CalcwiseAdFooter here — HistoryScreen is always embedded
+            // inside home_screen.dart's Scaffold, whose bottomNavigationBar
+            // already renders a persistent ad footer for every tab. Adding
+            // one here duplicated it (2 stacked banners) whenever this tab
+            // was active.
+            child: _firstLoad
                     ? const _HistorySkeleton()
                     : ListenableBuilder(
                         listenable: freemiumService.isRewardedNotifier,
@@ -325,10 +327,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ],
                         ),
                       )),
-              ),
-              const CalcwiseAdFooter(),
-            ],
-          ),
           ),
         );
       },
@@ -380,7 +378,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      PaywallHard.show(context);
+                      PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                     },
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: Text(

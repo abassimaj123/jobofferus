@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // reaches OfferEngine.compare (see offer_engine.dart) so a saved
     // scenario can be fully reconstructed. Keep in sync with
     // comparison_screen.dart's offerJson().
-    Map<String, dynamic> offerInputs(JobOffer o) => {
+    Map<String, dynamic> offerInputs(JobOffer o, [OfferResult? r]) => {
           'label': o.label,
           'company': o.company,
           'base_salary': o.baseSalary,
@@ -113,6 +113,14 @@ class _HomeScreenState extends State<HomeScreen> {
           'is_hourly': o.isHourly,
           'hours_per_week': o.hoursPerWeek,
           'deadline': o.deadline?.toIso8601String(),
+          // Result fields — lets the history list/detail show real net/monthly/
+          // tax figures for entries saved from this screen (see
+          // JobOfferUSDatabaseAdapter.insertRow, which reads these).
+          if (r != null) ...{
+            'net': r.netTakeHome,
+            'monthly': r.monthlyTakeHome,
+            'tax_rate': r.effectiveTaxRate,
+          },
         };
     final result = OfferEngine.compare(
       _offerA,
@@ -122,9 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final winner = result.winner;
     return {
       'inputs': {
-        'offerA': offerInputs(_offerA),
-        'offerB': offerInputs(_offerB),
-        if (offerCActive) 'offerC': offerInputs(_offerC),
+        'offerA': offerInputs(_offerA, result.resultA),
+        'offerB': offerInputs(_offerB, result.resultB),
+        if (offerCActive) 'offerC': offerInputs(_offerC, result.resultC),
       },
       'results': {
         'winner': winner == Winner.offerA
@@ -214,6 +222,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _scheduleAutoSaveIfValid() {
     if (!_canCompare) return;
+    // _canCompare only guards baseSalary > 0 — a transient mid-typing state
+    // (e.g. salary briefly "$4" while retyping "$75,000") passes that guard
+    // and would otherwise persist a nonsensical entry to History looking
+    // like a real saved comparison.
+    if (_offerA.baseSalary < 1000 ||
+        _offerB.baseSalary < 1000 ||
+        (_showOfferC && _offerC.baseSalary < 1000)) {
+      return;
+    }
     smartHistoryService.scheduleAutoSave(
       appKey: _appKey,
       screenId: _screenId,
@@ -254,6 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
       l2: _l2Snapshot(),
       onSaved: () {
         if (mounted) setState(() {});
+        HistoryScreen.refreshNotifier.value++;
       },
     );
     if (!mounted) return;
@@ -270,7 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showPaywall() {
-    PaywallHard.show(context);
+    PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
   }
 
   @override
@@ -335,8 +353,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       adService.onSave();
                       final trigger = await paywallSession.recordAction();
                       if (!mounted) return;
-                      if (trigger == PaywallTrigger.soft) PaywallSoft.show(context);
-                      if (trigger == PaywallTrigger.hard) PaywallHard.show(context);
+                      if (trigger == PaywallTrigger.soft) PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
+                      if (trigger == PaywallTrigger.hard) PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                     },
                   )
                 : null,
@@ -377,8 +395,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() => _tabIndex = i);
                   final trigger = await paywallSession.recordAction();
                   if (!mounted) return;
-                  if (trigger == PaywallTrigger.soft) PaywallSoft.show(context);
-                  if (trigger == PaywallTrigger.hard) PaywallHard.show(context);
+                  if (trigger == PaywallTrigger.soft) PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
+                  if (trigger == PaywallTrigger.hard) PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                 },
                 destinations: [
                   NavigationDestination(
@@ -489,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           onPremium: () {
-            PaywallHard.show(context);
+            PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
           },
         ),
       ],
@@ -694,7 +712,7 @@ class _HeroBanner extends StatelessWidget {
           Row(children: [
             _HChip(s.heroChip51States),
             const SizedBox(width: AppSpacing.sm),
-            _HChip('FICA · IRS 2025'),
+            _HChip('FICA · IRS 2026'),
             const SizedBox(width: AppSpacing.sm),
             _HChip(s.heroChip3Offers,
                 color: AppTheme.offerC.withValues(alpha: 0.22)),

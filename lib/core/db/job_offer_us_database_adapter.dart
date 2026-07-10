@@ -18,24 +18,65 @@ class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
 
   @override
   Future<int> insertRow(Map<String, dynamic> row) async {
+    final l1 = jsonDecode(row['l1_json'] as String) as Map<String, dynamic>;
     final l2 = jsonDecode(row['l2_json'] as String) as Map<String, dynamic>;
     final savedAt = DateTime.fromMillisecondsSinceEpoch(row['saved_at'] as int);
 
+    // Both save paths (home_screen.dart's live autosave and
+    // comparison_screen.dart's explicit save) produce a nested
+    // `{inputs: {offerA, offerB, ...}, results: {winner, ...}}` shape — never
+    // the flat job_title/company/salary/... shape this method used to read.
+    // Every field silently defaulted to '' / 0.0 as a result. Extract from
+    // the actual shape instead, tolerating the two callers' differing key
+    // names (e.g. 'base_salary' vs 'base', 'pto_days' vs 'pto').
+    final inputs = (l2['inputs'] as Map?)?.cast<String, dynamic>() ?? {};
+    final results = (l2['results'] as Map?)?.cast<String, dynamic>() ?? {};
+    final offerA = (inputs['offerA'] as Map?)?.cast<String, dynamic>() ?? {};
+    final offerB = (inputs['offerB'] as Map?)?.cast<String, dynamic>() ?? {};
+    final winnerLetter = results['winner'] as String?;
+    final winnerKey = winnerLetter == 'B'
+        ? 'offerB'
+        : winnerLetter == 'C'
+            ? 'offerC'
+            : 'offerA';
+    final winner =
+        (inputs[winnerKey] as Map?)?.cast<String, dynamic>() ?? offerA;
+
+    double numOf(Map<String, dynamic> m, List<String> keys) {
+      for (final k in keys) {
+        final v = m[k];
+        if (v is num) return v.toDouble();
+      }
+      return 0.0;
+    }
+
+    final labelA = offerA['label'] as String? ?? 'Offer A';
+    final labelB = offerB['label'] as String? ?? 'Offer B';
+    final winnerTotalKey = winnerKey == 'offerB'
+        ? 'offer_b_total'
+        : winnerKey == 'offerC'
+            ? 'offer_c_total'
+            : 'offer_a_total';
+
     return DatabaseHelper.instance.insertHistory({
-      'job_title': (l2['job_title'] as String?) ?? '',
-      'company': (l2['company'] as String?) ?? '',
-      'location': (l2['location'] as String?) ?? '',
-      'salary': (l2['salary'] as num?)?.toDouble() ?? 0.0,
-      'bonus': (l2['bonus'] as num?)?.toDouble() ?? 0.0,
-      'benefits': (l2['benefits'] as num?)?.toDouble() ?? 0.0,
-      'stock_options': (l2['stock_options'] as num?)?.toDouble() ?? 0.0,
-      'relocation': (l2['relocation'] as num?)?.toDouble() ?? 0.0,
-      'pto': (l2['pto'] as num?)?.toInt() ?? 0,
-      'signing_bonus': (l2['signing_bonus'] as num?)?.toDouble() ?? 0.0,
-      'net_salary': (l2['net_salary'] as num?)?.toDouble() ?? 0.0,
-      'monthly_net': (l2['monthly_net'] as num?)?.toDouble() ?? 0.0,
-      'tax_rate': (l2['tax_rate'] as num?)?.toDouble() ?? 0.0,
-      'comparison_json': l2['comparison_json'],
+      'job_title': '$labelA vs $labelB',
+      'company': (winner['company'] as String?) ?? '',
+      'location': (winner['city'] as String?) ?? '',
+      'salary': numOf(winner, ['base_salary', 'base']),
+      'bonus': numOf(winner, ['bonus_pct']),
+      'benefits': numOf(winner, ['health_insurance_savings']) +
+          numOf(winner, ['dental_vision_savings']) +
+          numOf(winner, ['health_savings']),
+      'stock_options': numOf(winner, ['rsu']),
+      'relocation': 0.0,
+      'pto': numOf(winner, ['pto_days', 'pto']).toInt(),
+      'signing_bonus': numOf(winner, ['signing_bonus', 'signing']),
+      'net_salary': winner['net'] is num
+          ? (winner['net'] as num).toDouble()
+          : numOf(l1, ['winner_net', winnerTotalKey]),
+      'monthly_net': numOf(winner, ['monthly']),
+      'tax_rate': numOf(winner, ['tax_rate']),
+      'comparison_json': results['comparison_json'],
       'created_at': savedAt.toIso8601String(),
       'input_hash': row['result_hash'],
       'is_pinned': row['is_pinned'] ?? 0,

@@ -1088,7 +1088,7 @@ class _ComparisonBody extends StatelessWidget {
                         ? null
                         : () {
                             if (!isPrem) {
-                              PaywallHard.show(context);
+                              PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                               return;
                             }
                             onExport();
@@ -1506,7 +1506,7 @@ class _LegacyBody extends StatelessWidget {
                       ? null
                       : () {
                           if (!isPremium) {
-                            PaywallHard.show(context);
+                            PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
                             return;
                           }
                           onExport();
