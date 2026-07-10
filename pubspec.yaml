@@ -1,7 +1,7 @@
 name: jobofferus
 description: Compare job offers — true after-tax total compensation analysis.
 publish_to: 'none'
-version: 1.0.9+6
+version: 1.0.10+7
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -45,9 +45,11 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
 
 flutter_launcher_icons:
-  android: true
+  android: "launcher_icon"
   ios: false
   image_path: "assets/images/icon.png"
+  adaptive_icon_background: "#2F2CDE"
+  adaptive_icon_foreground: "assets/images/icon.png"
   min_sdk_android: 21
   web:
     generate: false
