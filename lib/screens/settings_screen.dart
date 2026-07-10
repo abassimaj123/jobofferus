@@ -57,7 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const _SectionHeader('Premium'),
               _Card(
                 child: ValueListenableBuilder<bool>(
-                  valueListenable: freemiumService.hasFullAccessNotifier,
+                  valueListenable: freemiumService.isPremiumNotifier,
                   builder: (ctx, isPremium, _) => isPremium
                       ? ListTile(
                           contentPadding: EdgeInsets.zero,
