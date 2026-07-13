@@ -128,9 +128,7 @@ void main() async {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Initial style — brightness-aware override applied per-screen in build()
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle());
   PaywallHard.setAnalytics(AnalyticsService.instance);
   PaywallSoft.setAnalytics(AnalyticsService.instance);
   runApp(const JobOfferApp());

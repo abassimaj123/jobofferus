@@ -295,12 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
       statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-      // Transparent — the app draws under the system nav bar
-      // (edge-to-edge) instead of painting it opaque, per Android 15's
-      // forced behavior.
-      systemNavigationBarColor: Colors.transparent,
       systemNavigationBarIconBrightness:
           isDark ? Brightness.light : Brightness.dark,
     ));
