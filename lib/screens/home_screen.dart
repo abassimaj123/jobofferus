@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:calcwise_core/calcwise_core.dart' hide PaywallHard;
@@ -128,6 +129,77 @@ class _HomeScreenState extends State<HomeScreen> {
       offerCActive ? _offerC : null,
     );
     final winner = result.winner;
+    final winnerLetter = winner == Winner.offerA
+        ? 'A'
+        : winner == Winner.offerB
+            ? 'B'
+            : winner == Winner.offerC
+                ? 'C'
+                : 'tie';
+
+    // Full per-offer breakdown, matching comparison_screen.dart's offerJson()
+    // shape — this is what history_detail_screen.dart's _ComparisonBody and
+    // the PDF export read via results.comparison_json. Without this, saves
+    // triggered from this screen (the primary "Compare Offers" flow) fall
+    // back to the single-offer legacy History view and silently drop the
+    // losing offer's entire data.
+    Map<String, dynamic> compOfferJson(JobOffer o, OfferResult r) => {
+          'label': o.label,
+          'company': o.company,
+          'city': o.city,
+          'state': o.stateCode,
+          'remote': o.isRemote,
+          'base': o.baseSalary,
+          'bonus_pct': o.bonusPct,
+          'signing': o.signingBonus,
+          'rsu': o.annualRsuValue,
+          'pto': o.ptoDays,
+          'k401k_match_pct': o.k401kMatchPct,
+          'k401k_up_to_pct': o.k401kUpToPct,
+          'commute_miles': o.commuteMilesPerDay,
+          'health_savings': o.healthInsuranceSavings + o.dentalVisionSavings,
+          'annual_raise_pct': o.annualRaisePct,
+          'is_hourly': o.isHourly,
+          'hours_per_week': o.hoursPerWeek,
+          'deadline': o.deadline?.toIso8601String(),
+          'gross': r.grossSalary,
+          'federal': r.federalTax,
+          'state_tax': r.stateTax,
+          'local_tax': r.localTax,
+          'fica': r.ficaTax,
+          'total_tax': r.totalTax,
+          'tax_rate': r.effectiveTaxRate,
+          'net': r.netTakeHome,
+          'monthly': r.monthlyTakeHome,
+          'bonus_net': r.bonusAfterTax,
+          'annual_bonus': r.annualBonus,
+          'signing_net': r.signingBonusAfterTax,
+          'k401k_match_usd': r.k401kMatch,
+          'health': r.healthBenefits,
+          'pto_value': r.ptoValue,
+          'rsu_value': r.annualRsuValue,
+          'commute_cost': r.commuteCost,
+          'total_comp': r.totalCompensation,
+          'col_adj': r.colAdjustedTakeHome,
+          '5yr': r.fiveYearProjection,
+          'cumulative_5yr': r.cumulativeComp5Yr,
+          'k401k_wealth_65': r.k401kWealthAt65,
+          'net_wealth_5yr': r.netWealthAfter5Yrs,
+        };
+
+    final compJson = jsonEncode({
+      'v': 2,
+      'winner': winnerLetter,
+      'advantage': result.annualAdvantage,
+      'break_even_months': result.breakEvenMonths,
+      'offers': [
+        compOfferJson(_offerA, result.resultA),
+        compOfferJson(_offerB, result.resultB),
+        if (offerCActive) compOfferJson(_offerC, result.resultC!),
+      ],
+      'categories': result.categoryWinners.map((k, v) => MapEntry(k, v.name)),
+    });
+
     return {
       'inputs': {
         'offerA': offerInputs(_offerA, result.resultA),
@@ -135,18 +207,13 @@ class _HomeScreenState extends State<HomeScreen> {
         if (offerCActive) 'offerC': offerInputs(_offerC, result.resultC),
       },
       'results': {
-        'winner': winner == Winner.offerA
-            ? 'A'
-            : winner == Winner.offerB
-                ? 'B'
-                : winner == Winner.offerC
-                    ? 'C'
-                    : 'tie',
+        'winner': winnerLetter,
         'difference': result.annualAdvantage,
         'offer_a_total': result.resultA.totalCompensation,
         'offer_b_total': result.resultB.totalCompensation,
         if (offerCActive)
           'offer_c_total': result.resultC?.totalCompensation ?? 0.0,
+        'comparison_json': compJson,
       },
     };
   }

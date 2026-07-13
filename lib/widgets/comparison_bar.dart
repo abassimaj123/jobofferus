@@ -24,6 +24,7 @@ class ComparisonBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ct = CalcwiseTheme.of(context);
     final fmt = formatter ?? _money;
     final max = valueA > valueB ? valueA : valueB;
     final rA = max > 0 ? (valueA / max).clamp(0.0, 1.0) : 0.5;
@@ -50,15 +51,15 @@ class ComparisonBar extends StatelessWidget {
                   style: TextStyle(
                     fontSize: AppTextSize.body,
                     fontWeight: winA ? FontWeight.w700 : FontWeight.w500,
-                    color: winA ? AppTheme.offerA : AppTheme.textSecondary,
+                    color: winA ? AppTheme.offerA : ct.textSecondary,
                   )),
             ])),
             Expanded(
                 child: Text(label,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: AppTextSize.xs,
-                        color: AppTheme.textTertiary,
+                        color: ct.textSecondary,
                         fontWeight: FontWeight.w500))),
             Expanded(
                 child: Row(
@@ -68,7 +69,7 @@ class ComparisonBar extends StatelessWidget {
                     style: TextStyle(
                       fontSize: AppTextSize.body,
                       fontWeight: winB ? FontWeight.w700 : FontWeight.w500,
-                      color: winB ? AppTheme.offerB : AppTheme.textSecondary,
+                      color: winB ? AppTheme.offerB : ct.textSecondary,
                     )),
                 if (winB)
                   const Padding(
@@ -122,7 +123,7 @@ class ComparisonBar extends StatelessWidget {
                     width: 2,
                     height: 18,
                     decoration: BoxDecoration(
-                      color: AppTheme.cardBorder,
+                      color: ct.cardBorder,
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ))),
@@ -198,6 +199,7 @@ class ThreeWayBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ct = CalcwiseTheme.of(context);
     final fmt = formatter ?? _money;
     final maxVal = [valueA, valueB, valueC].reduce((a, b) => a > b ? a : b);
     final rA = maxVal > 0 ? (valueA / maxVal).clamp(0.0, 1.0) : 0.0;
@@ -211,9 +213,9 @@ class ThreeWayBar extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: AppTextSize.xs,
-              color: AppTheme.textTertiary,
+              color: ct.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -227,6 +229,7 @@ class ThreeWayBar extends StatelessWidget {
             deepColor: AppTheme.offerADeep,
             gradient: AppTheme.offerAGradient,
             fmt: fmt,
+            ct: ct,
           ),
           const SizedBox(height: 4),
           _ThreeRow(
@@ -238,6 +241,7 @@ class ThreeWayBar extends StatelessWidget {
             deepColor: AppTheme.offerBDeep,
             gradient: AppTheme.offerBGradient,
             fmt: fmt,
+            ct: ct,
           ),
           const SizedBox(height: 4),
           _ThreeRow(
@@ -249,6 +253,7 @@ class ThreeWayBar extends StatelessWidget {
             deepColor: AppTheme.offerCDeep,
             gradient: AppTheme.offerCGradient,
             fmt: fmt,
+            ct: ct,
           ),
         ],
       ),
@@ -267,6 +272,7 @@ class _ThreeRow extends StatelessWidget {
   final Color color, deepColor;
   final LinearGradient gradient;
   final String Function(double) fmt;
+  final CalcwiseTheme ct;
 
   const _ThreeRow({
     required this.letter,
@@ -277,6 +283,7 @@ class _ThreeRow extends StatelessWidget {
     required this.deepColor,
     required this.gradient,
     required this.fmt,
+    required this.ct,
   });
 
   @override
@@ -347,7 +354,7 @@ class _ThreeRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: AppTextSize.sm,
                     fontWeight: isWinner ? FontWeight.w700 : FontWeight.w500,
-                    color: isWinner ? color : AppTheme.textSecondary,
+                    color: isWinner ? color : ct.textSecondary,
                   ),
                   textAlign: TextAlign.right,
                   overflow: TextOverflow.ellipsis,

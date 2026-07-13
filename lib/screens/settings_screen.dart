@@ -72,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _Tile(
                             icon: Icons.workspace_premium_rounded,
                             label: s.getPremium,
-                            onTap: () => PaywallHard.show(ctx),
+                            onTap: () => PaywallHard.show(ctx, isSpanish: isSp),
                           ),
                           const Divider(height: 1),
                           _Tile(

@@ -30,8 +30,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> _history = [];
   bool _firstLoad = true;
 
-  final _fmtDate =
-      DateFormat('MMM d, yyyy', isSpanishNotifier.value ? 'es' : 'en');
+  // Built per-use from the live locale flag (not cached at State construction)
+  // since this tab is kept alive and outlives any single language selection.
+  DateFormat _fmtDate(bool isEs) => DateFormat('MMM d, yyyy', isEs ? 'es' : 'en');
 
   @override
   void initState() {
@@ -528,7 +529,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ]),
                   const SizedBox(height: 1),
                   Text(
-                    _fmtDate.format(createdAt),
+                    _fmtDate(isEs).format(createdAt),
                     style: TextStyle(
                         fontSize: AppTextSize.xs, color: ct.textSecondary),
                     overflow: TextOverflow.ellipsis,

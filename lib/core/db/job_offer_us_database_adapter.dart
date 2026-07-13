@@ -52,6 +52,8 @@ class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
 
     final labelA = offerA['label'] as String? ?? 'Offer A';
     final labelB = offerB['label'] as String? ?? 'Offer B';
+    final offerC = (inputs['offerC'] as Map?)?.cast<String, dynamic>();
+    final labelC = offerC?['label'] as String?;
     final winnerTotalKey = winnerKey == 'offerB'
         ? 'offer_b_total'
         : winnerKey == 'offerC'
@@ -59,7 +61,9 @@ class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
             : 'offer_a_total';
 
     return DatabaseHelper.instance.insertHistory({
-      'job_title': '$labelA vs $labelB',
+      'job_title': labelC != null && labelC.isNotEmpty
+          ? '$labelA vs $labelB vs $labelC'
+          : '$labelA vs $labelB',
       'company': (winner['company'] as String?) ?? '',
       'location': (winner['city'] as String?) ?? '',
       'salary': numOf(winner, ['base_salary', 'base']),
