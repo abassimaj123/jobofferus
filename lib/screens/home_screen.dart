@@ -559,6 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
         CalcwiseAppBarActions(
           freemium: freemiumService,
           session: paywallSession,
+          isSpanish: isSp,
           onSettings: () => Navigator.push(
             context,
             PageRouteBuilder(
