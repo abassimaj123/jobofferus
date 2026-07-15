@@ -15,7 +15,7 @@ class DatabaseHelper {
     final p = join(await getDatabasesPath(), 'job_offer_us.db');
     return openDatabase(
       p,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -34,6 +34,16 @@ class DatabaseHelper {
           await db.execute(
               'ALTER TABLE history ADD COLUMN pin_order INTEGER NOT NULL DEFAULT 0');
           await db.execute('ALTER TABLE history ADD COLUMN l1_json TEXT');
+        }
+        if (oldVersion < 5) {
+          // P0 fix: history rows previously had no screen_id column, so
+          // getRowByHash() looked up existing entries by input_hash alone.
+          // JobOfferUS has two save-capable screens ('home' live autosave and
+          // 'comparison' explicit save) — without screen_id scoping, a save
+          // from one screen could silently overwrite/merge into a row from
+          // the other screen whenever their rounded inputs hashed the same.
+          await db.execute(
+              "ALTER TABLE history ADD COLUMN screen_id TEXT NOT NULL DEFAULT 'calculator'");
         }
       },
     );
@@ -62,7 +72,8 @@ class DatabaseHelper {
         input_hash TEXT,
         pin_label TEXT,
         pin_order INTEGER NOT NULL DEFAULT 0,
-        l1_json TEXT
+        l1_json TEXT,
+        screen_id TEXT NOT NULL DEFAULT 'calculator'
       )
     ''');
   }
@@ -79,10 +90,13 @@ class DatabaseHelper {
         orderBy: 'is_pinned DESC, pin_order DESC, created_at DESC');
   }
 
-  Future<Map<String, dynamic>?> getHistoryByHash(String hash) async {
+  Future<Map<String, dynamic>?> getHistoryByHash(
+      String screenId, String hash) async {
     final db = await database;
     final rows = await db.query('history',
-        where: 'input_hash = ?', whereArgs: [hash], limit: 1);
+        where: 'screen_id = ? AND input_hash = ?',
+        whereArgs: [screenId, hash],
+        limit: 1);
     return rows.isEmpty ? null : rows.first;
   }
 

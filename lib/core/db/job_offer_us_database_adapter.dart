@@ -9,10 +9,13 @@ import 'database_helper.dart';
 /// to JobOfferUS's flat sqflite `history` table. A "scenario" here is a saved
 /// comparison of 2-3 job offers.
 ///
-/// `app_key` / `screen_id` are always 'jobofferus' / 'calculator' for this app.
+/// `app_key` is always 'jobofferus'. `screen_id` distinguishes the two
+/// save-capable screens: 'home' (live autosave) and 'comparison' (explicit
+/// save of a multi-offer comparison) — stored per-row so lookups/dedup are
+/// correctly scoped per screen.
 class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
   static const _appKey = 'jobofferus';
-  static const _screenId = 'calculator';
+  static const _defaultScreenId = 'calculator';
 
   // ── Insert ──────────────────────────────────────────────────────────────────
 
@@ -87,6 +90,7 @@ class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
       'pin_label': row['pin_label'],
       'pin_order': row['pin_order'] ?? 0,
       'l1_json': row['l1_json'],
+      'screen_id': (row['screen_id'] as String?) ?? _defaultScreenId,
     });
   }
 
@@ -100,16 +104,20 @@ class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
     int? limit,
   }) async {
     final db = await DatabaseHelper.instance.database;
-    String? where;
-    List<dynamic>? whereArgs;
+    final conditions = <String>[];
+    final whereArgs = <dynamic>[];
     if (isPinned != null) {
-      where = 'is_pinned = ?';
-      whereArgs = [isPinned ? 1 : 0];
+      conditions.add('is_pinned = ?');
+      whereArgs.add(isPinned ? 1 : 0);
+    }
+    if (screenId != null) {
+      conditions.add('screen_id = ?');
+      whereArgs.add(screenId);
     }
     final rows = await db.query(
       'history',
-      where: where,
-      whereArgs: whereArgs,
+      where: conditions.isEmpty ? null : conditions.join(' AND '),
+      whereArgs: whereArgs.isEmpty ? null : whereArgs,
       orderBy: 'is_pinned DESC, pin_order DESC, created_at DESC',
       limit: limit,
     );
@@ -119,9 +127,11 @@ class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
   @override
   Future<Map<String, dynamic>?> getRowByHash({
     required String appKey,
+    required String screenId,
     required String resultHash,
   }) async {
-    final row = await DatabaseHelper.instance.getHistoryByHash(resultHash);
+    final row =
+        await DatabaseHelper.instance.getHistoryByHash(screenId, resultHash);
     return row == null ? null : _toAdapterRow(row);
   }
 
@@ -174,7 +184,7 @@ class JobOfferUSDatabaseAdapter implements DatabaseAdapter {
     return {
       'id': row['id'],
       'app_key': _appKey,
-      'screen_id': _screenId,
+      'screen_id': (row['screen_id'] as String?) ?? _defaultScreenId,
       'result_hash': (row['input_hash'] as String?) ?? '',
       'l1_json': l1Json,
       'l2_json': l2Json,
