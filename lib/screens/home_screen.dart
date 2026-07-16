@@ -426,16 +426,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final s = isSp ? const AppStringsEs() : const AppStringsEn();
         return Scaffold(
-          body: GestureDetector(
-            onTap: () => FocusScope.of(context).unfocus(),
-            child: Stack(
-              fit: StackFit.expand,
-              children: List.generate(
-                screens.length,
-                (i) => IgnorePointer(
-                  ignoring: _tabIndex != i,
-                  child: CalcwiseTabReveal(
-                      active: _tabIndex == i, child: screens[i]),
+          body: SafeArea(
+            bottom: false,
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Stack(
+                fit: StackFit.expand,
+                children: List.generate(
+                  screens.length,
+                  (i) => IgnorePointer(
+                    ignoring: _tabIndex != i,
+                    child: CalcwiseTabReveal(
+                        active: _tabIndex == i, child: screens[i]),
+                  ),
                 ),
               ),
             ),
@@ -443,37 +446,40 @@ class _HomeScreenState extends State<HomeScreen> {
           floatingActionButton: _tabIndex == 0 ? _compareFab(isSp, s) : null,
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerFloat,
-          bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              MediaQuery.removePadding(
-                context: context,
-                removeBottom: true,
-                child: const CalcwiseAdFooter(),
-              ),
-              NavigationBar(
-                selectedIndex: _tabIndex,
-                onDestinationSelected: (i) async {
-                  setState(() => _tabIndex = i);
-                  final trigger = await paywallSession.recordAction();
-                  if (!mounted) return;
-                  if (trigger == PaywallTrigger.soft) PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
-                  if (trigger == PaywallTrigger.hard) PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
-                },
-                destinations: [
-                  NavigationDestination(
-                    icon: const Icon(Icons.swap_horiz_rounded),
-                    selectedIcon: const Icon(Icons.compare_arrows_rounded),
-                    label: s.compare,
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.bookmark_border_rounded),
-                    selectedIcon: const Icon(Icons.bookmark_rounded),
-                    label: s.history,
-                  ),
-                ],
-              ),
-            ],
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MediaQuery.removePadding(
+                  context: context,
+                  removeBottom: true,
+                  child: const CalcwiseAdFooter(),
+                ),
+                NavigationBar(
+                  selectedIndex: _tabIndex,
+                  onDestinationSelected: (i) async {
+                    setState(() => _tabIndex = i);
+                    final trigger = await paywallSession.recordAction();
+                    if (!mounted) return;
+                    if (trigger == PaywallTrigger.soft) PaywallSoft.show(context, isSpanish: isSpanishNotifier.value);
+                    if (trigger == PaywallTrigger.hard) PaywallHard.show(context, isSpanish: isSpanishNotifier.value);
+                  },
+                  destinations: [
+                    NavigationDestination(
+                      icon: const Icon(Icons.swap_horiz_rounded),
+                      selectedIcon: const Icon(Icons.compare_arrows_rounded),
+                      label: s.compare,
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.bookmark_border_rounded),
+                      selectedIcon: const Icon(Icons.bookmark_rounded),
+                      label: s.history,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
