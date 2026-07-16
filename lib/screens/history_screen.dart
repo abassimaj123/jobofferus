@@ -109,6 +109,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _rename(Map<String, dynamic> row, bool isEs) async {
+    if (!freemiumService.hasFullAccess) {
+      await PaywallHard.show(context, isSpanish: isEs);
+      return;
+    }
     final ctrl = TextEditingController(
       text: (row['pin_label'] as String?) ?? '',
     );
