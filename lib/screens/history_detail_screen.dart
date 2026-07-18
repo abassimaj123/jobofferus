@@ -45,7 +45,7 @@ Future<Uint8List> _buildHistoryComparisonPdf(
   final advantage = (comp['advantage'] as num?)?.toDouble() ?? 0;
   final categories = (comp['categories'] as Map<String, dynamic>? ?? {});
 
-  final primary = PdfColor.fromHex('4F46E5');
+  final primary = PdfColor.fromHex('3949AB');
   final accent = PdfColor.fromHex('F59E0B');
   final green = PdfColor.fromHex('16A34A');
   final grey = PdfColors.grey700;
@@ -148,7 +148,7 @@ Future<Uint8List> _buildHistoryComparisonPdf(
   String _letter(int i) => ['A', 'B', 'C'][i.clamp(0, 2)];
 
   PdfColor _offerColor(int i) {
-    const colors = ['4F46E5', '0891B2', 'D97706'];
+    const colors = ['3949AB', '0891B2', 'D97706'];
     return PdfColor.fromHex(colors[i.clamp(0, 2)]);
   }
 
@@ -494,7 +494,7 @@ class _HistorySinglePdfParams {
 Future<Uint8List> _buildHistorySinglePdf(
     _HistorySinglePdfParams p) async {
   final pctFmt = NumberFormat('0.0#', 'en_US');
-  final primary = PdfColor.fromHex('4F46E5');
+  final primary = PdfColor.fromHex('3949AB');
   final grey = PdfColors.grey700;
 
   pw.TableRow pdfRow(String label, String value, {bool bold = false}) =>
@@ -743,7 +743,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   static String _letter(int i) => ['A', 'B', 'C'][i.clamp(0, 2)];
 
   static PdfColor _offerColor(int i) {
-    const colors = ['4F46E5', '0891B2', 'D97706'];
+    const colors = ['3949AB', '0891B2', 'D97706'];
     return PdfColor.fromHex(colors[i.clamp(0, 2)]);
   }
 

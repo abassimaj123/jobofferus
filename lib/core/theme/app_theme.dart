@@ -10,16 +10,16 @@ class AppTheme {
   static const Color surfaceHigh = Color(0xFF1E1B35); // cards / inputs
   static const Color surfaceVariant = Color(0xFF211E38); // input fill
   static const Color cardBorder = Color(0xFF2E2B4A); // subtle border
-  static const Color cardBorderFocus = Color(0xFF4F46E5); // focused border
+  static const Color cardBorderFocus = Color(0xFF3949AB); // focused border
 
   // ── Brand ─────────────────────────────────────────────────────────────────
-  static const Color primary = Color(0xFF4F46E5);
+  static const Color primary = Color(0xFF3949AB);
   static const Color primaryLight = Color(0xFF818CF8);
   static const Color primaryDark = Color(0xFF3730A3);
 
   static const Color offerA = Color(0xFF818CF8); // Indigo 400 — bright on dark
   static const Color offerB = Color(0xFFA78BFA); // Violet 400 — bright on dark
-  static const Color offerADeep = Color(0xFF4F46E5); // used for gradients
+  static const Color offerADeep = Color(0xFF3949AB); // used for gradients
   static const Color offerBDeep = Color(0xFF7C3AED);
   // Light circle colors for the icon / badge (high contrast on dark bg)
   static const Color offerALight = Color(0xFFC8C3FF); // periwinkle
@@ -69,7 +69,7 @@ class AppTheme {
   );
 
   static const LinearGradient ctaGradient = LinearGradient(
-    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+    colors: [Color(0xFF3949AB), Color(0xFF7C3AED)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
@@ -83,7 +83,7 @@ class AppTheme {
   // ── Shadows ────────────────────────────────────────────────────────────────
   static List<BoxShadow> get cardShadow => [
         BoxShadow(
-          color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+          color: const Color(0xFF3949AB).withValues(alpha: 0.15),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -91,7 +91,7 @@ class AppTheme {
 
   static List<BoxShadow> get ctaShadow => [
         BoxShadow(
-          color: const Color(0xFF4F46E5).withValues(alpha: 0.45),
+          color: const Color(0xFF3949AB).withValues(alpha: 0.45),
           blurRadius: 24,
           offset: const Offset(0, 8),
         ),
@@ -99,7 +99,7 @@ class AppTheme {
 
   static List<BoxShadow> get offerACardShadow => [
         BoxShadow(
-          color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
+          color: const Color(0xFF3949AB).withValues(alpha: 0.25),
           blurRadius: 24,
           offset: const Offset(0, 6),
         ),
