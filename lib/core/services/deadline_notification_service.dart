@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+import 'analytics_service.dart';
 
 /// Service that schedules local notifications for offer deadlines.
 /// Call [initialize] once in main() before runApp().
@@ -33,7 +34,17 @@ class DeadlineNotificationService {
         iOS: iosInit,
       );
 
-      await _plugin.initialize(initSettings);
+      await _plugin.initialize(
+        initSettings,
+        // "Fired but not tapped" can't be observed for local notifications
+        // without a running background isolate — flutter_local_notifications
+        // doesn't provide that callback. Tap IS observable, so that's the
+        // funnel step we can actually measure: was a scheduled reminder ever
+        // acted on, at least the ones the user saw and opened.
+        onDidReceiveNotificationResponse: (response) {
+          AnalyticsService.instance.logReminderTapped(response.payload ?? 'offer_deadline');
+        },
+      );
 
       // Request Android 13+ notification permission
       final androidImpl = _plugin.resolvePlatformSpecificImplementation<
@@ -91,7 +102,9 @@ class DeadlineNotificationService {
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
+          payload: 'offer_deadline_48h',
         );
+        AnalyticsService.instance.logReminderScheduled('offer_deadline_48h');
       } catch (_) {}
     }
 
@@ -115,7 +128,9 @@ class DeadlineNotificationService {
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
+          payload: 'offer_deadline_day_of',
         );
+        AnalyticsService.instance.logReminderScheduled('offer_deadline_day_of');
       } catch (_) {}
     }
   }
