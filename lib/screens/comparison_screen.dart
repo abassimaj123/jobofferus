@@ -589,7 +589,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
           hasC ? AmountFormatter.ui(c!.stateTax, 'USD') : null,
         ),
         row3(
-          'FICA',
+          'FICA (SS + Medicare)',
           AmountFormatter.ui(a.ficaTax, 'USD'),
           AmountFormatter.ui(b.ficaTax, 'USD'),
           hasC ? AmountFormatter.ui(c!.ficaTax, 'USD') : null,

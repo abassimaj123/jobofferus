@@ -14,11 +14,11 @@ class OnboardingScreen extends StatelessWidget {
             icon: Icons.work_rounded,
             title: 'Compare Job Offers\nClearly',
             subtitle:
-                'Net salary, benefits, RSUs — see the full picture before you decide.',
+                'Net salary, benefits, RSUs (stock grants) — see the full picture before you decide.',
             pills: ['Net Salary', 'Benefits', 'RSUs'],
             titleEs: 'Compara ofertas\nde trabajo claramente',
             subtitleEs:
-                'Salario neto, beneficios, RSUs — el panorama completo antes de decidir.',
+                'Salario neto, beneficios, RSUs (acciones restringidas) — el panorama completo antes de decidir.',
             pillsEs: ['Salario neto', 'Beneficios', 'RSUs'],
           ),
           OnboardingPage(

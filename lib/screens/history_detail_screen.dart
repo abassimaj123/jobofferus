@@ -970,7 +970,7 @@ class _ComparisonBody extends StatelessWidget {
               _CompRow(s.stateLabel2,
                   [for (var o in offers) amt(o['state_tax'])],
                   ct: ct),
-              _CompRow('FICA',
+              _CompRow('FICA (SS + Medicare)',
                   [for (var o in offers) amt(o['fica'])],
                   ct: ct),
               _CompRow(s.totalTaxes,

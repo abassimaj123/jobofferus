@@ -404,6 +404,9 @@ class _OfferFormCardState extends State<OfferFormCard>
                               suffix: '%',
                               num: true,
                               icon: Icons.savings_rounded,
+                              helperText: widget.isSpanish
+                                  ? 'Aporte del empleador'
+                                  : 'Employer contribution rate',
                               onCh: (_) => scheduleCalc(_emit))),
                       const SizedBox(width: AppSpacing.smPlus),
                       Expanded(
@@ -413,6 +416,9 @@ class _OfferFormCardState extends State<OfferFormCard>
                               hint: '4',
                               suffix: '%',
                               num: true,
+                              helperText: widget.isSpanish
+                                  ? 'Tope del match, % del salario'
+                                  : 'Match cap, as % of salary',
                               onCh: (_) => scheduleCalc(_emit))),
                     ]),
                     const SizedBox(height: AppSpacing.md),
@@ -447,6 +453,9 @@ class _OfferFormCardState extends State<OfferFormCard>
                         num: true,
                         isCurrency: true,
                         icon: Icons.trending_up_rounded,
+                        helperText: widget.isSpanish
+                            ? 'RSU = unidades de acciones restringidas'
+                            : 'RSU = Restricted Stock Units (stock grant)',
                         onCh: (_) => scheduleCalc(_emit)),
                     const SizedBox(height: AppSpacing.md),
                     _remoteToggle(),
@@ -640,6 +649,7 @@ class _OfferFormCardState extends State<OfferFormCard>
     IconData? icon,
     bool num = false,
     bool isCurrency = false,
+    String? helperText,
     ValueChanged<String>? onCh,
   }) =>
       TextFormField(
@@ -659,6 +669,8 @@ class _OfferFormCardState extends State<OfferFormCard>
           prefixText: prefix,
           suffixText: suffix,
           prefixIcon: icon != null ? Icon(icon, size: 17) : null,
+          helperText: helperText,
+          helperMaxLines: 2,
           floatingLabelStyle:
               TextStyle(color: _c1, fontWeight: FontWeight.w600),
         ),
